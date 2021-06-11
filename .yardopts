@@ -1,0 +1,10 @@
+--no-private
+--markup=markdown
+--verbose
+--title "Cuboid - Web Application Security Scanner"
+components/**/*.rb
+lib/**/*.rb
+ui/**/*.rb
+-
+CHANGELOG.md
+LICENSE.md
