@@ -35,7 +35,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'concurrent-ruby-ext', '1.1.8'
 
     # For compressing/decompressing system state archives.
-    s.add_dependency 'rubyzip',             '1.2.2'
+    s.add_dependency 'rubyzip',             '2.3.0'
 
     s.add_dependency 'childprocess',        '0.8.0'
 
@@ -47,7 +47,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'oj_mimic_json',       '1.0.1'
 
     # Web server
-    s.add_dependency 'puma',                '3.10.0'
+    s.add_dependency 'puma',                '5.3.2'
 
     s.add_dependency 'rack',                '2.2.3'
     s.add_dependency 'rack-test'
