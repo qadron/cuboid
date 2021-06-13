@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rake', '11.3.0'
+gem 'rake', '13.0.3'
 
 group :docs do
     gem 'yard'
