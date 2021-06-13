@@ -6,9 +6,9 @@ Gem::Specification.new do |s|
     s.name              = 'cuboid'
     s.version           = Cuboid::VERSION
     s.date              = Time.now.strftime( '%Y-%m-%d' )
-    s.summary           = 'Cuboid is a feature-full, modular, high-performance Ruby framework.'
+    s.summary           = 'An application-centric, decentralised and distributed computing solution. '
 
-    s.homepage          = 'https://www.placeholder.com'
+    s.homepage          = 'https://github.com/qadron/cuboid'
     s.email             = 'tasos.laskos@gmail.com'
     s.authors           = [ 'Tasos Laskos' ]
     s.licenses          = ['All rights reserved.']
@@ -20,13 +20,6 @@ Gem::Specification.new do |s|
     s.files            += Dir.glob( 'spec/**/**' )
     s.files            += %w(Gemfile Rakefile cuboid.gemspec)
     s.test_files        = Dir.glob( 'spec/**/**' )
-
-    # Disable pushes to public servers.
-    if s.respond_to?(:metadata)
-        s.metadata['allowed_push_host'] = 'http://localhost/'
-    else
-        raise 'RubyGems 2.0 or newer is required to protect against public gem pushes.'
-    end
 
     s.extra_rdoc_files  = %w(README.md LICENSE.md CHANGELOG.md)
 
@@ -70,7 +63,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'sys-proctable',       '1.1.5'
 
     s.description = <<DESCRIPTION
-Cuboid is a feature-full, modular, high-performance Ruby framework.
+An application-centric, decentralised and distributed computing solution.
 DESCRIPTION
 
 end
