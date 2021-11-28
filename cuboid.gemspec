@@ -47,7 +47,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'oj_mimic_json',       '1.0.1'
 
     # Web server
-    s.add_dependency 'puma',                '5.3.2'
+    s.add_dependency 'puma',                '5.5.2'
 
     s.add_dependency 'rack',                '2.2.3'
     s.add_dependency 'rack-test'
