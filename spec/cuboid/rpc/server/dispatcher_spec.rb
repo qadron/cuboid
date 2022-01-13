@@ -20,11 +20,44 @@ describe Cuboid::RPC::Server::Dispatcher do
 
     describe '#preferred' do
         context 'when the dispatcher is a grid member' do
-            it 'returns the URL of least burdened Dispatcher' do
-                dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
-                dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+            context 'and strategy is' do
+                context :horizontal do
+                    it 'returns the URL of least burdened Dispatcher' do
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
 
-                expect(subject.preferred).to eq(subject.url)
+                        expect(subject.preferred( :horizontal )).to eq(subject.url)
+                    end
+                end
+
+                context :vertical do
+                    it 'returns the URL of most burdened Dispatcher' do
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+                        d = dispatcher_spawn( neighbour: subject.url )
+                        d.dispatch( load_balance: false )
+                        d.dispatch( load_balance: false )
+
+                        expect(subject.preferred( :vertical )).to eq(d.url)
+                    end
+                end
+
+                context 'default' do
+                    it 'returns the URL of least burdened Dispatcher' do
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+
+                        expect(subject.preferred).to eq(subject.url)
+                    end
+                end
+
+                context 'other' do
+                    it 'returns :error_unknown_strategy' do
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+                        dispatcher_spawn( neighbour: subject.url ).dispatch( load_balance: false )
+
+                        expect(subject.preferred( :blah )).to eq('error_unknown_strategy')
+                    end
+                end
             end
 
             context 'and all Dispatchers are at max utilization' do
@@ -154,40 +187,122 @@ describe Cuboid::RPC::Server::Dispatcher do
         context 'when a Grid member' do
             let(:slots) { 4 }
 
-            it 'returns Instance info from the least burdened Dispatcher' do
-                d1 = dispatcher_spawn(
-                    address: '127.0.0.1',
-                    application: "#{fixtures_path}/mock_app.rb"
-                )
+            context 'and strategy is' do
+                context :horizontal do
+                    it 'provides Instances from the least burdened Dispatcher' do
+                        d1 = dispatcher_spawn(
+                          address: '127.0.0.1',
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
 
-                3.times do
-                    d1.dispatch( load_balance: false )
+                        3.times do
+                            d1.dispatch( load_balance: false )
+                        end
+
+                        d2 = dispatcher_spawn(
+                          address:   '127.0.0.2',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+
+                        2.times do
+                            d2.dispatch( load_balance: false )
+                        end
+
+                        d3 = dispatcher_spawn(
+                          address:   '127.0.0.3',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+                        d3.dispatch( load_balance: false )
+                        preferred = d3.url.split( ':' ).first
+
+                        expect(d3.dispatch(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.3 127.0.0.2}).to include d1.dispatch['url'].split( ':' ).first
+                        expect(d2.dispatch(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.1 127.0.0.3}).to include d3.dispatch(strategy: :horizontal )['url'].split( ':' ).first
+                        expect(%W{127.0.0.2 127.0.0.3}).to include d3.dispatch(strategy: :horizontal )['url'].split( ':' ).first
+                        expect(%W{127.0.0.2 127.0.0.3}).to include d1.dispatch(strategy: :horizontal )['url'].split( ':' ).first
+                    end
                 end
 
-                d2 = dispatcher_spawn(
-                    address:   '127.0.0.2',
-                    neighbour: d1.url,
-                    application: "#{fixtures_path}/mock_app.rb"
-                )
+                context :vertical do
+                    it 'provides Instances from the most burdened Dispatcher' do
+                        d1 = dispatcher_spawn(
+                          address: '127.0.0.1',
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
 
-                2.times do
-                    d2.dispatch( load_balance: false )
+                        3.times do
+                            d1.dispatch( load_balance: false )
+                        end
+
+                        d2 = dispatcher_spawn(
+                          address:   '127.0.0.2',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+
+                        2.times do
+                            d2.dispatch( load_balance: false )
+                        end
+
+                        d3 = dispatcher_spawn(
+                          address:   '127.0.0.3',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+                        d3.dispatch( load_balance: false )
+
+                        preferred = d1.url.split( ':' ).first
+                        expect(d3.dispatch( strategy: :vertical )['url'].split( ':' ).first).to eq(preferred)
+                    end
                 end
 
-                d3 = dispatcher_spawn(
-                    address:   '127.0.0.3',
-                    neighbour: d1.url,
-                    application: "#{fixtures_path}/mock_app.rb"
-                )
-                d3.dispatch( load_balance: false )
-                preferred = d3.url.split( ':' ).first
+                context 'default' do
+                    it 'provides Instances from the least burdened Dispatcher' do
+                        d1 = dispatcher_spawn(
+                          address: '127.0.0.1',
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
 
-                expect(d3.dispatch['url'].split( ':' ).first).to eq(preferred)
-                expect(%W{127.0.0.3 127.0.0.2}).to include d1.dispatch['url'].split( ':' ).first
-                expect(d2.dispatch['url'].split( ':' ).first).to eq(preferred)
-                expect(%W{127.0.0.1 127.0.0.3}).to include d3.dispatch['url'].split( ':' ).first
-                expect(%W{127.0.0.2 127.0.0.3}).to include d3.dispatch['url'].split( ':' ).first
-                expect(%W{127.0.0.2 127.0.0.3}).to include d1.dispatch['url'].split( ':' ).first
+                        3.times do
+                            d1.dispatch( load_balance: false )
+                        end
+
+                        d2 = dispatcher_spawn(
+                          address:   '127.0.0.2',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+
+                        2.times do
+                            d2.dispatch( load_balance: false )
+                        end
+
+                        d3 = dispatcher_spawn(
+                          address:   '127.0.0.3',
+                          neighbour: d1.url,
+                          application: "#{fixtures_path}/mock_app.rb"
+                        )
+                        d3.dispatch( load_balance: false )
+                        preferred = d3.url.split( ':' ).first
+
+                        expect(d3.dispatch['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.3 127.0.0.2}).to include d1.dispatch['url'].split( ':' ).first
+                        expect(d2.dispatch['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.1 127.0.0.3}).to include d3.dispatch['url'].split( ':' ).first
+                        expect(%W{127.0.0.2 127.0.0.3}).to include d3.dispatch['url'].split( ':' ).first
+                        expect(%W{127.0.0.2 127.0.0.3}).to include d1.dispatch['url'].split( ':' ).first
+                    end
+                end
+
+                context 'other' do
+                    it 'returns :error_unknown_strategy' do
+                        expect(dispatcher_spawn( neighbour: subject.url ).
+                          dispatch( strategy: 'blah' )).to eq('error_unknown_strategy')
+                    end
+                end
             end
 
             context 'when the load-balance option is set to false' do
