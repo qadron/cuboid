@@ -130,6 +130,12 @@ grid << MyApp.spawn( :dispatcher, neighbour: grid.sample.url )
     # machine but you get the point.
     instance_info = node.dispatch
 
+    # There are 2 available strategies for workload distribution:
+    #   * Horizontal (default) -- Provides Instances from the least burdened Dispatcher.
+    #       * node.dispatch( strategy: horizontal )
+    #   * Vertical  -- Provides Instances from the most burdened Dispatcher.
+    #       * node.dispatch( strategy: vertical )
+
     instance = MyApp.connect( instance_info )
     instance.run( id: [i, node.url] )
     # :run

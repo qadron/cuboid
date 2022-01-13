@@ -14,6 +14,7 @@ It offers:
   * No need to setup a topology manually, _**Dispatchers**_ will reach
     convergence on their own, just point them to an existing _**Grid**_ member.
   * Scaling up and down can be easily achieved by _plugging_ or _unplugging_ nodes.
+  * Horizontal (`default`) and vertical workload distribution strategies available.
   * Fault tolerant -- one application per process (_**Instance**_).
   * Self-healing -- keeps an eye out for disappearing and also re-appearing members.
 * A clean and simple framework for application development.
