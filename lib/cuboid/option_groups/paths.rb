@@ -74,16 +74,21 @@ class Paths < Cuboid::OptionGroup
 
     def initialize
         @root = self.root_path
+        FileUtils.mkdir_p home_path
 
-        @snapshots = self.config['snapshots'] || @root + 'snapshots/'
-        @reports   = self.config['reports']   || @root + 'reports/'
+        @snapshots = self.config['snapshots'] || home_path + '/snapshots/'
+        FileUtils.mkdir_p @snapshots
+
+        @reports = self.config['reports'] || home_path + '/reports/'
+        FileUtils.mkdir_p @reports
 
         if ENV['CUBOID_LOGDIR'].to_s != ''
             @logs = "#{ENV['CUBOID_LOGDIR']}/"
         elsif self.config['logs']
             @logs = self.config['logs']
         else
-            @logs = "#{@root}logs/"
+            @logs = "#{home_path}/logs/"
+            FileUtils.mkdir_p @logs
         end
 
         @lib         = @root    + 'lib/cuboid/'
@@ -96,6 +101,10 @@ class Paths < Cuboid::OptionGroup
         end
 
         tmpdir
+    end
+
+    def home_path
+        @home_path ||= "#{ENV['HOME']}/.cuboid/"
     end
 
     def root_path
