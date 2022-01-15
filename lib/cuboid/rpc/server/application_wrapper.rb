@@ -15,9 +15,10 @@ class ApplicationWrapper
     attr_reader :application
 
     extend Forwardable
-    def_delegators :@application, :suspended?, :suspend!, :status,
-                   :pause!, :running?, :status_messages, :paused?,
-                   :snapshot_path, :restore!, :resume!, :generate_report
+    def_delegators :@application, :suspended?, :suspending?, :suspend!, :status,
+                   :pause!, :running?, :status_messages, :paused?, :pausing?,
+                   :snapshot_path, :restore!, :resume!, :generate_report,
+                   :abort!, :aborting?, :aborted?
 
     # {RPC::Server::Application} error namespace.
     #
