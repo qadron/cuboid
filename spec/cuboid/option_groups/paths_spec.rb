@@ -110,7 +110,6 @@ describe Cuboid::OptionGroups::Paths do
                 end
 
                 expect(described_class.new.snapshots).to eq('snapshots-stuff/')
-
                 @created_resources << described_class.new.snapshots
             end
         end
