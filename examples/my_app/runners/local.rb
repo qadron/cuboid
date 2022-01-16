@@ -1,4 +1,4 @@
-require_relative '../my_app'
+require_relative '../application'
 
 puts
 ap '=' * 80

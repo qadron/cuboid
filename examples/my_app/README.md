@@ -1,6 +1,6 @@
 # Cuboid framework application example
 
-You can find a simple **Cuboid** application in `my_app.rb`,  called `MyApp`.
+You can find a simple **Cuboid** application in `application.rb`,  called `MyApp`.
 
 Sample runners are under `runners/`, although there's no clear-cut and specific way.
 
@@ -12,12 +12,12 @@ Sample runners are under `runners/`, although there's no clear-cut and specific 
 
 ### RPC
 
-    bundle exec ruby examples/rpc.rb
+    bundle exec ruby runners/rpc.rb
 
 ### REST
 
-    bundle exec ruby examples/rest.rb
+    bundle exec ruby runners/rest.rb
 
 ### Local
 
-    bundle exec ruby examples/local.rb
+    bundle exec ruby runners/local.rb

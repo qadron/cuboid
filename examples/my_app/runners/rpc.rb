@@ -1,4 +1,4 @@
-require_relative '../my_app'
+require_relative '../application'
 
 # Cuboid provides rudimentary process management for common entities, let's get them.
 include Cuboid::Processes

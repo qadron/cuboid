@@ -1,4 +1,4 @@
-require_relative '../my_app'
+require_relative '../application'
 
 # Access to the #request and #response_* methods.
 require_relative 'rest/helpers'

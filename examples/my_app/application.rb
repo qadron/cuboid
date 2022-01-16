@@ -1,8 +1,8 @@
 require 'cuboid'
 
-require_relative 'my_app/rpc_api'
-require_relative 'my_app/rest_api'
-require_relative 'my_app/aggregator'
+require_relative 'lib/rpc_api'
+require_relative 'lib/rest_api'
+require_relative 'lib/aggregator'
 
 class MyApp < Cuboid::Application
 
