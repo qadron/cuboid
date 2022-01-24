@@ -423,7 +423,8 @@ class Scheduler
     def spawn_instance( &block )
         if dispatcher
             options = {
-              owner:   self.class.to_s,
+              owner:    self.class.to_s,
+              strategy: Cuboid::Options.dispatcher.strategy,
               helpers: {
                     owner: {
                         url: @url

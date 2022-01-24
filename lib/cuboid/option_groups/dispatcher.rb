@@ -5,6 +5,8 @@ module Cuboid::OptionGroups
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
 class Dispatcher < Cuboid::OptionGroup
 
+    STRATEGIES = Set.new([:horizontal, :vertical])
+
     # @return   [String]
     #   URL of a {RPC::Server::Dispatcher}.
     attr_accessor :url
@@ -29,10 +31,24 @@ class Dispatcher < Cuboid::OptionGroup
     #   Dispatcher name.
     attr_accessor :name
 
+    attr_accessor :strategy
+
     set_defaults(
+        strategy:            :horizontal,
         ping_interval:       5.0,
         instance_port_range: [1025, 65535]
     )
+
+    def strategy=( type )
+        return @strategy = defaults[:strategy] if !type
+
+        type = type.to_sym
+        if !STRATEGIES.include? type
+            fail ArgumentError, "Unknown strategy type: #{type}"
+        end
+
+        @strategy = type
+    end
 
 end
 end

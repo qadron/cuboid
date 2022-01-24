@@ -62,7 +62,8 @@ class Schedulers
 
         options = {
             dispatcher: {
-                url: options[:dispatcher],
+                url:      options[:dispatcher],
+                strategy: options[:strategy]
             },
             rpc:        {
                 server_port:             options[:port]    || Utilities.available_port,

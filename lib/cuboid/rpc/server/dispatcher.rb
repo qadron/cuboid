@@ -31,7 +31,7 @@ class Dispatcher
 
     SERVICE_NAMESPACE = Service
 
-    PREFERENCE_STRATEGIES = Set.new([:horizontal, :vertical])
+    PREFERENCE_STRATEGIES = Cuboid::OptionGroups::Dispatcher::STRATEGIES
 
     def initialize( options = Options.instance )
         @options = options
@@ -90,7 +90,7 @@ class Dispatcher
     #       this Dispatcher's URL.
     #   * `nil` if all nodes are at max utilization or on error.
     #   * `ArgumentError` -- On invalid `strategy`.
-    def preferred( strategy = :horizontal, &block )
+    def preferred( strategy = Cuboid::Options.dispatcher.strategy, &block )
         strategy = strategy.to_sym
         if !PREFERENCE_STRATEGIES.include? strategy
             block.call :error_unknown_strategy
