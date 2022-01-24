@@ -61,16 +61,28 @@ class Instances
     # @return   [RPC::Client::Instance, Integer]
     #   RPC client and PID.
     def spawn( options = {}, &block )
+        options = options.dup
         token = options.delete(:token) || Utilities.generate_token
         fork  = options.delete(:fork)
 
         port_range = options.delete( :port_range )
 
+        options[:ssl] ||= {
+          server: {},
+          client: {}
+        }
+
         options = {
             rpc:    {
                 server_socket:  options[:socket],
                 server_port:    options[:port]    || Utilities.available_port( port_range ),
-                server_address: options[:address] || '127.0.0.1'
+                server_address: options[:address] || '127.0.0.1',
+
+                ssl_ca:                 options[:ssl][:ca],
+                server_ssl_private_key: options[:ssl][:server][:private_key],
+                server_ssl_certificate: options[:ssl][:server][:certificate],
+                client_ssl_private_key: options[:ssl][:client][:private_key],
+                client_ssl_certificate: options[:ssl][:client][:certificate],
             },
             paths: {
                 application: options[:application]  || Options.paths.application

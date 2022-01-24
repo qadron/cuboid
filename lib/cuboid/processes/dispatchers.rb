@@ -54,7 +54,13 @@ class Dispatchers
     #
     # @return   [RPC::Client::Dispatcher]
     def spawn( options = {} )
+        options = options.dup
         fork = options.delete(:fork)
+
+        options[:ssl] ||= {
+          server: {},
+          client: {}
+        }
 
         options = {
             dispatcher: {
@@ -63,7 +69,13 @@ class Dispatchers
             rpc:        {
                 server_port:             options[:port]    || Utilities.available_port,
                 server_address:          options[:address] || '127.0.0.1',
-                server_external_address: options[:external_address]
+                server_external_address: options[:external_address],
+
+                ssl_ca:                 options[:ssl][:ca],
+                server_ssl_private_key: options[:ssl][:server][:private_key],
+                server_ssl_certificate: options[:ssl][:server][:certificate],
+                client_ssl_private_key: options[:ssl][:client][:private_key],
+                client_ssl_certificate: options[:ssl][:client][:certificate],
             },
             paths: {
                 application: options[:application] || Options.paths.application
