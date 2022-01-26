@@ -103,15 +103,15 @@ class Application
             @max_memory ||= 0
         end
 
-        def provision_disk( ram )
-            @max_disk = ram
+        def provision_disk( disk )
+            @max_disk = disk
         end
 
         def max_disk
-            @max_memory ||= 0
+            @max_disk ||= 0
         end
 
-        def instance_service_for(name, service )
+        def instance_service_for( name, service )
             instance_services[name] = service
         end
 
