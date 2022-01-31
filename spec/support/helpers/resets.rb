@@ -40,7 +40,7 @@ end
 
 def processes_killall
     instance_killall
-    dispatcher_killall
+    agent_killall
     scheduler_killall
     process_killall
     process_kill_reactor

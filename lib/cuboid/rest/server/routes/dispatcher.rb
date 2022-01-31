@@ -3,32 +3,32 @@ module Rest
 class Server
 module Routes
 
-module Dispatcher
+module Agent
 
     def self.registered( app )
 
-        app.get '/dispatcher/url' do
-            ensure_dispatcher!
+        app.get '/agent/url' do
+            ensure_agent!
 
-            json Options.dispatcher.url
+            json Options.agent.url
         end
 
-        app.put '/dispatcher/url' do
+        app.put '/agent/url' do
             url = ::JSON.load( request.body.read ) || {}
 
             handle_error do
-                connect_to_dispatcher( url ).alive?
+                connect_to_agent( url ).alive?
 
-                @dispatcher = nil
-                Options.dispatcher.url = url
+                @agent = nil
+                Options.agent.url = url
                 json nil
             end
         end
 
-        app.delete '/dispatcher/url' do
-            ensure_dispatcher!
+        app.delete '/agent/url' do
+            ensure_agent!
 
-            json @dispatcher = Options.dispatcher.url = nil
+            json @agent = Options.agent.url = nil
         end
 
     end

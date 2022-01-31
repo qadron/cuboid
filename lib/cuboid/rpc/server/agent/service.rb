@@ -1,7 +1,7 @@
 module Cuboid
 module RPC
 
-# Base class and namespace for all Dispatcher services.
+# Base class and namespace for all Agent services.
 #
 # # RPC accessibility
 #
@@ -26,20 +26,20 @@ module RPC
 # results to that block instead of returning a value.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Server::Dispatcher::Service
+class Server::Agent::Service
 
     attr_reader :options
-    attr_reader :dispatcher
+    attr_reader :agent
 
-    def initialize( options, dispatcher )
+    def initialize( options, agent )
         @options    = options
-        @dispatcher = dispatcher
+        @agent = agent
     end
 
-    # @return   [Server::Dispatcher::Node]
+    # @return   [Server::Agent::Node]
     #   Local node.
     def node
-        dispatcher.instance_eval { @node }
+        agent.instance_eval { @node }
     end
 
     # Performs an asynchronous map operation over all running instances.
@@ -102,17 +102,17 @@ class Server::Dispatcher::Service
     # @return   [Array<Hash>]
     #   Alive instances.
     def instances
-        dispatcher.running_instances
+        agent.running_instances
     end
 
-    # Connects to a Dispatcher by `url`
+    # Connects to a Agent by `url`
     #
     # @param    [String]    url
     #
-    # @return   [Client::Dispatcher]
-    def connect_to_dispatcher( url )
-        @dispatcher_connections ||= {}
-        @dispatcher_connections[url] ||= Client::Dispatcher.new( url )
+    # @return   [Client::Agent]
+    def connect_to_agent( url )
+        @agent_connections ||= {}
+        @agent_connections[url] ||= Client::Agent.new( url )
     end
 
     # Connects to an Instance by `url`.

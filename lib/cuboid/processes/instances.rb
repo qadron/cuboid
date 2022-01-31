@@ -21,7 +21,7 @@ class Instances
     #
     # Connects to a Instance by URL.
     #
-    # @param    [String]    url URL of the Dispatcher.
+    # @param    [String]    url URL of the Agent.
     # @param    [String]    token
     #   Authentication token -- only need be provided once.
     #
@@ -125,10 +125,10 @@ class Instances
         end
     end
 
-    # Starts {RPC::Server::Dispatcher} grid and returns a high-performance Instance.
+    # Starts {RPC::Server::Agent} grid and returns a high-performance Instance.
     #
     # @param    [Hash]  options
-    # @option options [Integer] :grid_size (3)  Amount of Dispatchers to spawn.
+    # @option options [Integer] :grid_size (3)  Amount of Agents to spawn.
     #
     # @return   [RPC::Client::Instance]
     def grid_spawn(options = {} )
@@ -136,23 +136,23 @@ class Instances
 
         last_member = nil
         options[:grid_size].times do |i|
-            last_member = Dispatchers.spawn(
-                neighbour: last_member ? last_member.url : last_member,
+            last_member = Agents.spawn(
+                peer: last_member ? last_member.url : last_member,
                 pipe_id:   Utilities.available_port.to_s + Utilities.available_port.to_s
             )
         end
 
         info = nil
-        info = last_member.dispatch while !info && sleep( 0.1 )
+        info = last_member.spawn while !info && sleep( 0.1 )
 
         connect( info['url'], info['token'] )
     end
 
-    # Starts {RPC::Server::Dispatcher} and returns an Instance.
+    # Starts {RPC::Server::Agent} and returns an Instance.
     #
     # @return   [RPC::Client::Instance]
-    def dispatcher_spawn
-        info = Dispatchers.spawn.dispatch
+    def agent_spawn
+        info = Agents.spawn.spawn
         connect( info['url'], info['token'] )
     end
 

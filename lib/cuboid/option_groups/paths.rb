@@ -70,7 +70,7 @@ class Paths < Cuboid::OptionGroup
 
     # @!attribute executables
     #   @return [String]
-    #       System processes (instance, dispatcher, browser, etc.).
+    #       System processes (instance, agent, browser, etc.).
 
     def initialize
         @root = self.root_path

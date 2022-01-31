@@ -7,19 +7,19 @@ require_relative 'rest/helpers'
 include Cuboid
 
 # The REST API provides a nice and clean interface for Instances, Queues and
-# Dispatchers -- as always, if the Dispatcher is connected to a Grid you can
+# Agents -- as always, if the Agent is connected to a Grid you can
 # enjoy load-balancing.
 #
 # The REST interface can:
 #   * spawn Instances on its own
-#   * use a Dispatcher to spawn Instances
-#       * if the Dispatcher is part of a Grid it enjoys load-balancing.
+#   * use a Agent to spawn Instances
+#       * if the Agent is part of a Grid it enjoys load-balancing.
 #   * use a Queue to spawn and manage Instances -- if the Queue is configured
-#       with a Dispatcher
+#       with a Agent
 #       * it will use it to spawn Instances
-#           * if the Dispatcher is part of a Grid it enjoys load-balancing.
+#           * if the Agent is part of a Grid it enjoys load-balancing.
 
-# Simple example, no Dispatcher nor Queue.
+# Simple example, no Agent nor Queue.
 pid = MyApp.spawn( :rest )
 # Wait for the server to boot-up.
 sleep 1 while request( :get ).code == 0
@@ -64,7 +64,7 @@ ap response_data
 #   "busy" => false,
 #   "application" => "CuboidApp",
 #   "seed" => "e255b50f0f782052161423c5c3ddbdab",
-#   "dispatcher_url" => nil,
+#   "agent_url" => nil,
 #   "queue_url" => nil,
 #   "statistics" => {
 #     "runtime" => 0.000547441

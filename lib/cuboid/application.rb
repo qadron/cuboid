@@ -127,12 +127,12 @@ class Application
             @rest_services ||= {}
         end
 
-        def dispatcher_service_for( name, service )
-            dispatcher_services[name] = service
+        def agent_service_for( name, service )
+            agent_services[name] = service
         end
 
-        def dispatcher_services
-            @dispatcher_services ||= {}
+        def agent_services
+            @agent_services ||= {}
         end
 
         def handler_for( signal, handler )
@@ -183,8 +183,8 @@ class Application
             case type
             when :instance
                 const = :Instances
-            when :dispatcher
-                const = :Dispatchers
+            when :agent
+                const = :Agents
             when :scheduler
                 const = :Schedulers
             when :rest

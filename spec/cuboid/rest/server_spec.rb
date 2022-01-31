@@ -15,7 +15,7 @@ describe Cuboid::Rest::Server do
     let(:id) { @id }
     let(:non_existent_id) { 'stuff' }
 
-    let(:dispatcher) { Cuboid::Processes::Dispatchers.spawn }
+    let(:agent) { Cuboid::Processes::Agents.spawn }
     let(:scheduler) { Cuboid::Processes::Schedulers.spawn }
 
     def create_instance
@@ -235,17 +235,17 @@ describe Cuboid::Rest::Server do
             end
         end
 
-        context 'when a Dispatcher has been set' do
+        context 'when a Agent has been set' do
 
             it 'uses it' do
-                put '/dispatcher/url', dispatcher.url
+                put '/agent/url', agent.url
 
-                get "/grid/#{dispatcher.url}"
+                get "/grid/#{agent.url}"
                 expect(response_data['running_instances']).to be_empty
 
                 create_instance
 
-                get "/grid/#{dispatcher.url}"
+                get "/grid/#{agent.url}"
                 expect(response_data['running_instances'].size).to eq 1
             end
         end
@@ -623,32 +623,32 @@ describe Cuboid::Rest::Server do
         end
     end
 
-    describe 'GET /dispatcher/url' do
-        let(:tpl_url) { '/dispatcher/url' }
+    describe 'GET /agent/url' do
+        let(:tpl_url) { '/agent/url' }
 
-        it 'returns the Dispatcher' do
-            put url, dispatcher.url
+        it 'returns the Agent' do
+            put url, agent.url
             expect(response_code).to eq 200
 
             get url
             expect(response_code).to eq 200
-            expect(response_data).to eq dispatcher.url
+            expect(response_data).to eq agent.url
         end
 
-        context 'when no Dispatcher has been set' do
+        context 'when no Agent has been set' do
             it 'returns 501' do
                 get url
                 expect(response_code).to eq 501
-                expect(response_data).to eq 'No Dispatcher has been set.'
+                expect(response_data).to eq 'No Agent has been set.'
             end
         end
     end
 
-    describe 'PUT /dispatcher/url' do
-        let(:tpl_url) { '/dispatcher/url' }
+    describe 'PUT /agent/url' do
+        let(:tpl_url) { '/agent/url' }
 
-        it 'sets the Dispatcher' do
-            put url, dispatcher.url
+        it 'sets the Agent' do
+            put url, agent.url
             expect(response_code).to eq 200
         end
 
@@ -663,101 +663,101 @@ describe Cuboid::Rest::Server do
         end
     end
 
-    describe 'DELETE /dispatcher/url' do
-        let(:tpl_url) { '/dispatcher/url' }
+    describe 'DELETE /agent/url' do
+        let(:tpl_url) { '/agent/url' }
 
-        it 'removes the the Dispatcher' do
-            put url, dispatcher.url
+        it 'removes the the Agent' do
+            put url, agent.url
             expect(response_code).to eq 200
 
             delete url
             expect(response_code).to eq 200
 
-            get url, dispatcher.url
+            get url, agent.url
             expect(response_code).to eq 501
         end
 
-        context 'when no Dispatcher has been set' do
+        context 'when no Agent has been set' do
             it 'returns 501' do
                 delete url
                 expect(response_code).to eq 501
-                expect(response_data).to eq 'No Dispatcher has been set.'
+                expect(response_data).to eq 'No Agent has been set.'
             end
         end
     end
 
     describe 'GET /grid' do
-        let(:dispatcher) { Cuboid::Processes::Dispatchers.grid_spawn }
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
         let(:tpl_url) { '/grid' }
 
         it 'returns Grid info' do
-            put '/dispatcher/url', dispatcher.url
+            put '/agent/url', agent.url
             expect(response_code).to eq 200
 
             get url
             expect(response_code).to eq 200
-            expect(response_data.sort).to eq ([dispatcher.url] + dispatcher.node.neighbours).sort
+            expect(response_data.sort).to eq ([agent.url] + agent.node.peers).sort
         end
 
-        context 'when no Dispatcher has been set' do
+        context 'when no Agent has been set' do
             it 'returns 501' do
                 get url
                 expect(response_code).to eq 501
-                expect(response_data).to eq 'No Dispatcher has been set.'
+                expect(response_data).to eq 'No Agent has been set.'
             end
         end
     end
 
-    describe 'GET /grid/:dispatcher' do
-        let(:dispatcher) { Cuboid::Processes::Dispatchers.grid_spawn }
+    describe 'GET /grid/:agent' do
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
         let(:tpl_url) { '/grid/%s' }
 
-        it 'returns Dispatcher info' do
-            put '/dispatcher/url', dispatcher.url
+        it 'returns Agent info' do
+            put '/agent/url', agent.url
             expect(response_code).to eq 200
 
-            @id = dispatcher.url
+            @id = agent.url
 
             get url
             expect(response_code).to eq 200
-            expect(response_data).to eq dispatcher.statistics
+            expect(response_data).to eq agent.statistics
         end
 
-        context 'when no Dispatcher has been set' do
+        context 'when no Agent has been set' do
             it 'returns 501' do
                 @id = 'localhost:2222'
 
                 get url
                 expect(response_code).to eq 501
-                expect(response_data).to eq 'No Dispatcher has been set.'
+                expect(response_data).to eq 'No Agent has been set.'
             end
         end
     end
 
-    describe 'DELETE /grid/:dispatcher' do
-        let(:dispatcher) { Cuboid::Processes::Dispatchers.grid_spawn }
+    describe 'DELETE /grid/:agent' do
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
         let(:tpl_url) { '/grid/%s' }
 
-        it 'unplugs the Dispatcher from the Grid' do
-            put '/dispatcher/url', dispatcher.url
+        it 'unplugs the Agent from the Grid' do
+            put '/agent/url', agent.url
             expect(response_code).to eq 200
 
-            @id = dispatcher.url
+            @id = agent.url
 
-            expect(dispatcher.node.grid_member?).to be_truthy
+            expect(agent.node.grid_member?).to be_truthy
 
             delete url
             expect(response_code).to eq 200
-            expect(dispatcher.node.grid_member?).to be_falsey
+            expect(agent.node.grid_member?).to be_falsey
         end
 
-        context 'when no Dispatcher has been set' do
+        context 'when no Agent has been set' do
             it 'returns 501' do
                 @id = 'localhost:2222'
 
                 delete url
                 expect(response_code).to eq 501
-                expect(response_data).to eq 'No Dispatcher has been set.'
+                expect(response_data).to eq 'No Agent has been set.'
             end
         end
     end

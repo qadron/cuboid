@@ -1,6 +1,6 @@
-require 'cuboid/rpc/server/dispatcher'
+require 'cuboid/rpc/server/agent'
 
-class Aggregator < Cuboid::RPC::Server::Dispatcher::Service
+class Aggregator < Cuboid::RPC::Server::Agent::Service
 
     def foo( &block )
         aggregate( __method__, &block )

@@ -5,10 +5,10 @@ class Server
 module InstanceHelpers
 
     @@instances   = {}
-    @@dispatchers = {}
+    @@agents = {}
 
     def get_instance
-        if dispatcher
+        if agent
             options = {
               owner:   self.class.to_s,
               helpers: {
@@ -18,7 +18,7 @@ module InstanceHelpers
                 }
             }
 
-            if (info = dispatcher.dispatch( options ))
+            if (info = agent.spawn( options ))
                 connect_to_instance( info['url'], info['token'] )
             end
         else
@@ -26,24 +26,24 @@ module InstanceHelpers
         end
     end
 
-    def dispatchers
-        @@dispatchers.keys
+    def agents
+        @@agents.keys
     end
 
-    def dispatcher
-        return if !Options.dispatcher.url
-        @dispatcher ||= connect_to_dispatcher( Options.dispatcher.url )
+    def agent
+        return if !Options.agent.url
+        @agent ||= connect_to_agent( Options.agent.url )
     end
 
-    def unplug_dispatcher( url )
-        connect_to_dispatcher( url ).node.unplug
+    def unplug_agent( url )
+        connect_to_agent( url ).node.unplug
 
-        c = @@dispatchers.delete( url )
+        c = @@agents.delete( url )
         c.close if c
     end
 
-    def connect_to_dispatcher( url )
-        @@dispatchers[url] ||= RPC::Client::Dispatcher.new( url )
+    def connect_to_agent( url )
+        @@agents[url] ||= RPC::Client::Agent.new( url )
     end
 
     def connect_to_instance( url, token )

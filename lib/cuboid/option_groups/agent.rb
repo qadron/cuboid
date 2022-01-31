@@ -1,14 +1,14 @@
 module Cuboid::OptionGroups
 
-# Holds options for {RPC::Server::Dispatcher} servers.
+# Holds options for {RPC::Server::Agent} servers.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Dispatcher < Cuboid::OptionGroup
+class Agent < Cuboid::OptionGroup
 
     STRATEGIES = Set.new([:horizontal, :vertical])
 
     # @return   [String]
-    #   URL of a {RPC::Server::Dispatcher}.
+    #   URL of a {RPC::Server::Agent}.
     attr_accessor :url
 
     # @return   [Array<Integer>]
@@ -17,18 +17,18 @@ class Dispatcher < Cuboid::OptionGroup
     attr_accessor :instance_port_range
 
     # @return   [String]
-    #   The URL of a neighbouring {RPC::Server::Dispatcher}, applicable when
-    #   {RPC::Server::Dispatcher} are connected to each other to form a Grid.
+    #   The URL of a peering {RPC::Server::Agent}, applicable when
+    #   {RPC::Server::Agent} are connected to each other to form a Grid.
     #
-    # @see RPC::Server::Dispatcher::Node
-    attr_accessor :neighbour
+    # @see RPC::Server::Agent::Node
+    attr_accessor :peer
 
     # @return   [Float]
-    #   How regularly to check for neighbour statuses.
+    #   How regularly to check for peer statuses.
     attr_accessor :ping_interval
 
     # @return   [String]
-    #   Dispatcher name.
+    #   Agent name.
     attr_accessor :name
 
     attr_accessor :strategy

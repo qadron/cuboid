@@ -5,10 +5,10 @@ require Options.paths.lib + 'rpc/client/base'
 module RPC
 class Client
 
-# RPC Dispatcher client
+# RPC Agent client
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Dispatcher
+class Agent
     # Not always available, set by the parent.
     attr_accessor :pid
 
@@ -18,7 +18,7 @@ class Dispatcher
         @client = Base.new( url, nil, options )
         @node   = Arachni::RPC::Proxy.new( @client, 'node' )
 
-        Cuboid::Application.application.dispatcher_services.keys.each do |name|
+        Cuboid::Application.application.agent_services.keys.each do |name|
             self.class.send( :attr_reader, name.to_sym )
 
             instance_variable_set(
@@ -48,7 +48,7 @@ class Dispatcher
 
     # Used to provide the illusion of locality for remote methods
     def method_missing( sym, *args, &block )
-        @client.call( "dispatcher.#{sym.to_s}", *args, &block )
+        @client.call( "agent.#{sym.to_s}", *args, &block )
     end
 
 end

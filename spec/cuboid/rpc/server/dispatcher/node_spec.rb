@@ -1,7 +1,7 @@
 require 'spec_helper'
-require "#{Cuboid::Options.paths.lib}/rpc/server/dispatcher"
+require "#{Cuboid::Options.paths.lib}/rpc/server/agent"
 
-describe Cuboid::RPC::Server::Dispatcher::Node do
+describe Cuboid::RPC::Server::Agent::Node do
 
     def get_node( port = available_port )
         Cuboid::Options.rpc.server_port = port
@@ -25,7 +25,7 @@ describe Cuboid::RPC::Server::Dispatcher::Node do
 
     before( :each ) do
         options.paths.executables        = "#{fixtures_path}executables/"
-        options.dispatcher.ping_interval = 0.5
+        options.agent.ping_interval = 0.5
     end
     after( :each )  do
         Cuboid::Processes::Manager.killall
@@ -35,9 +35,9 @@ describe Cuboid::RPC::Server::Dispatcher::Node do
     let(:options) { Cuboid::Options }
 
     describe '#grid_member?' do
-        context 'when the dispatcher is a grid member' do
+        context 'when the agent is a grid member' do
             it 'should return true' do
-                options.dispatcher.neighbour = subject.url
+                options.agent.peer = subject.url
 
                 c = get_node
                 sleep 0.5
@@ -46,68 +46,68 @@ describe Cuboid::RPC::Server::Dispatcher::Node do
             end
         end
 
-        context 'when the dispatcher is not a grid member' do
+        context 'when the agent is not a grid member' do
             it 'should return false' do
                 expect(subject.grid_member?).to be_falsey
             end
         end
     end
 
-    context 'when a previously unreachable neighbour comes back to life' do
-        it 'gets re-added to the neighbours list' do
+    context 'when a previously unreachable peer comes back to life' do
+        it 'gets re-added to the peers list' do
             port = available_port
-            subject.add_neighbour( '127.0.0.1:' + port.to_s )
+            subject.add_peer( '127.0.0.1:' + port.to_s )
 
             sleep 3
-            expect(subject.neighbours).to be_empty
+            expect(subject.peers).to be_empty
 
             c = get_node( port )
 
             sleep 0.5
-            expect(subject.neighbours).to eq([c.url])
-            expect(c.neighbours).to eq([subject.url])
+            expect(subject.peers).to eq([c.url])
+            expect(c.peers).to eq([subject.url])
         end
     end
 
-    context 'when a neighbour becomes unreachable' do
+    context 'when a peer becomes unreachable' do
         it 'is removed' do
             c = get_node
 
-            subject.add_neighbour( c.url )
+            subject.add_peer( c.url )
             sleep 0.5
 
-            expect(c.neighbours).to eq([subject.url])
-            expect(subject.neighbours).to eq([c.url])
+            expect(c.peers).to eq([subject.url])
+            expect(subject.peers).to eq([c.url])
 
             subject.shutdown rescue break while sleep 0.1
             sleep 0.5
 
-            expect(c.neighbours).to be_empty
+            expect(c.peers).to be_empty
         end
     end
 
-    context 'when initialised with a neighbour' do
-        it 'adds that neighbour and reach convergence' do
-            options.dispatcher.neighbour = subject.url
+    context 'when initialised with a peer' do
+        it 'adds that peer and reach convergence' do
+            options.agent.peer = subject.url
 
             c = get_node
             sleep 0.5
-            expect(c.neighbours).to eq([subject.url])
-            expect(subject.neighbours).to eq([c.url])
+            expect(c.peers).to eq([subject.url])
+            expect(subject.peers).to eq([c.url])
 
             d = get_node
             sleep 0.5
-            expect(d.neighbours.sort).to eq([subject.url, c.url].sort)
-            expect(c.neighbours.sort).to eq([subject.url, d.url].sort)
-            expect(subject.neighbours.sort).to eq([c.url, d.url].sort)
+            expect(d.peers.sort).to eq([subject.url, c.url].sort)
+            expect(c.peers.sort).to eq([subject.url, d.url].sort)
+            expect(subject.peers.sort).to eq([c.url, d.url].sort)
 
-            options.dispatcher.neighbour = d.url
+            options.agent.peer = d.url
             e = get_node
             sleep 0.5
-            expect(e.neighbours.sort).to eq([subject.url, c.url, d.url].sort)
-            expect(d.neighbours.sort).to eq([subject.url, c.url, e.url].sort)
-            expect(c.neighbours.sort).to eq([subject.url, d.url, e.url].sort)
-            expect(subject.neighbours.sort).to eq([c.url, d.url, e.url].sort)
+            expect(e.peers.sort).to eq([subject.url, c.url, d.url].sort)
+            expect(d.peers.sort).to eq([subject.url, c.url, e.url].sort)
+            expect(c.peers.sort).to eq([subject.url, d.url, e.url].sort)
+            expect(subject.peers.sort).to eq([c.url, d.url, e.url].sort)
         end
     end
 
@@ -115,75 +115,75 @@ describe Cuboid::RPC::Server::Dispatcher::Node do
         it 'removes itself from the Grid' do
             c = get_node
 
-            subject.add_neighbour( c.url )
+            subject.add_peer( c.url )
             sleep 0.5
-            expect(c.neighbours).to eq([subject.url])
+            expect(c.peers).to eq([subject.url])
 
             c.unplug
 
-            expect(c.neighbours).to be_empty
+            expect(c.peers).to be_empty
             expect(c.grid_member?).to be_falsey
         end
     end
 
-    describe '#add_neighbour' do
+    describe '#add_peer' do
         before(:each) do
-            subject.add_neighbour( other.url )
+            subject.add_peer( other.url )
             sleep 0.5
         end
 
         let( :other ) { get_node }
 
-        it 'adds a neighbour' do
-            expect(subject.neighbours).to eq([other.url])
-            expect(other.neighbours).to eq([subject.url])
+        it 'adds a peer' do
+            expect(subject.peers).to eq([other.url])
+            expect(other.peers).to eq([subject.url])
         end
 
         context 'when propagate is set to true' do
-            it 'announces the new neighbour to the existing neighbours' do
+            it 'announces the new peer to the existing peers' do
                 n = get_node
-                subject.add_neighbour( n.url, true )
+                subject.add_peer( n.url, true )
                 sleep 0.5
 
-                expect(subject.neighbours.sort).to eq([other.url, n.url].sort)
-                expect(other.neighbours.sort).to eq([subject.url, n.url].sort)
+                expect(subject.peers.sort).to eq([other.url, n.url].sort)
+                expect(other.peers.sort).to eq([subject.url, n.url].sort)
 
                 c = get_node
-                n.add_neighbour( c.url, true )
+                n.add_peer( c.url, true )
                 sleep 0.5
 
-                expect(subject.neighbours.sort).to eq([other.url, n.url, c.url].sort)
-                expect(other.neighbours.sort).to eq([subject.url, n.url, c.url].sort)
-                expect(c.neighbours.sort).to eq([subject.url, n.url, other.url].sort)
+                expect(subject.peers.sort).to eq([other.url, n.url, c.url].sort)
+                expect(other.peers.sort).to eq([subject.url, n.url, c.url].sort)
+                expect(c.peers.sort).to eq([subject.url, n.url, other.url].sort)
 
                 d = get_node
-                d.add_neighbour( c.url, true )
+                d.add_peer( c.url, true )
                 sleep 0.5
 
-                expect(subject.neighbours.sort).to eq([d.url, other.url, n.url, c.url].sort)
-                expect(other.neighbours.sort).to eq([d.url, subject.url, n.url, c.url].sort)
-                expect(c.neighbours.sort).to eq([d.url, subject.url, n.url, other.url].sort)
-                expect(d.neighbours.sort).to eq([c.url, subject.url, n.url, other.url].sort)
+                expect(subject.peers.sort).to eq([d.url, other.url, n.url, c.url].sort)
+                expect(other.peers.sort).to eq([d.url, subject.url, n.url, c.url].sort)
+                expect(c.peers.sort).to eq([d.url, subject.url, n.url, other.url].sort)
+                expect(d.peers.sort).to eq([c.url, subject.url, n.url, other.url].sort)
             end
         end
     end
 
-    describe '#neighbours' do
-        it 'returns an array of neighbours' do
-            expect(subject.neighbours.is_a?( Array )).to be_truthy
+    describe '#peers' do
+        it 'returns an array of peers' do
+            expect(subject.peers.is_a?( Array )).to be_truthy
         end
     end
 
-    describe '#neighbours_with_info' do
-        it 'returns all neighbours accompanied by their node info' do
-            subject.add_neighbour( get_node.url )
+    describe '#peers_with_info' do
+        it 'returns all peers accompanied by their node info' do
+            subject.add_peer( get_node.url )
             sleep 0.5
 
-            expect(subject.neighbours).to be_any
-            expect(subject.neighbours_with_info.size).to eq (subject.neighbours.size)
+            expect(subject.peers).to be_any
+            expect(subject.peers_with_info.size).to eq (subject.peers.size)
 
             keys = subject.info.keys.sort
-            subject.neighbours_with_info.each do |i|
+            subject.peers_with_info.each do |i|
                 expect(i.keys.sort).to eq(keys)
             end
         end
@@ -191,18 +191,18 @@ describe Cuboid::RPC::Server::Dispatcher::Node do
 
     describe '#info' do
         it 'returns node info' do
-            options.dispatcher.name = 'blah'
+            options.agent.name = 'blah'
 
             c = get_node
-            subject.add_neighbour( c.url )
+            subject.add_peer( c.url )
             sleep 0.5
 
             info = subject.info
 
             expect(info['url']).to eq(subject.url)
-            expect(info['neighbours']).to eq(subject.neighbours)
-            expect(info['unreachable_neighbours']).to be_empty
-            expect(info['name']).to eq(options.dispatcher.name)
+            expect(info['peers']).to eq(subject.peers)
+            expect(info['unreachable_peers']).to be_empty
+            expect(info['name']).to eq(options.agent.name)
         end
 
         context 'when OptionGroups::RPC#server_external_address has been set' do

@@ -1,36 +1,36 @@
 require 'spec_helper'
-require "#{Cuboid::Options.paths.lib}/rpc/server/dispatcher"
+require "#{Cuboid::Options.paths.lib}/rpc/server/agent"
 
-describe Cuboid::RPC::Server::Dispatcher::Service do
+describe Cuboid::RPC::Server::Agent::Service do
     before( :each ) do
         Cuboid::Options.paths.services   = "#{fixtures_path}services/"
         Cuboid::Options.system.max_slots = 10
     end
     let(:instance_count) { 3 }
-    let(:dispatcher) { dispatcher_spawn application: "#{fixtures_path}/mock_app.rb" }
-    let(:subject) { dispatcher.test_service }
+    let(:agent) { agent_spawn application: "#{fixtures_path}/mock_app.rb" }
+    let(:subject) { agent.test_service }
 
-    describe '#dispatcher' do
-        it 'provides access to the parent Dispatcher' do
-            expect(subject.test_dispatcher).to be_truthy
+    describe '#agent' do
+        it 'provides access to the parent Agent' do
+            expect(subject.test_agent).to be_truthy
         end
     end
 
     describe '#opts' do
-        it 'provides access to the Dispatcher\'s options' do
+        it 'provides access to the Agent\'s options' do
             expect(subject.test_opts).to be_truthy
         end
     end
 
     describe '#node' do
-        it 'provides access to the Dispatcher\'s node' do
+        it 'provides access to the Agent\'s node' do
             expect(subject.test_node).to be_truthy
         end
     end
 
     describe '#instances' do
         before(:each) do
-            instance_count.times { dispatcher.dispatch }
+            instance_count.times { agent.spawn }
         end
 
         it 'provides access to the running instances' do
@@ -40,7 +40,7 @@ describe Cuboid::RPC::Server::Dispatcher::Service do
 
     describe '#map_instances' do
         before(:each) do
-            instance_count.times { dispatcher.dispatch }
+            instance_count.times { agent.spawn }
         end
 
         it 'asynchronously maps all running instances' do
@@ -52,7 +52,7 @@ describe Cuboid::RPC::Server::Dispatcher::Service do
 
     describe '#each_instance' do
         before(:each) do
-            instance_count.times { dispatcher.dispatch }
+            instance_count.times { agent.spawn }
         end
 
         it 'asynchronously iterates over all running instances' do
@@ -92,15 +92,15 @@ describe Cuboid::RPC::Server::Dispatcher::Service do
         end
     end
 
-    describe '#connect_to_dispatcher' do
-        it 'connects to the a dispatcher by url' do
-            expect(subject.test_connect_to_dispatcher( dispatcher.url )).to be_truthy
+    describe '#connect_to_agent' do
+        it 'connects to the a agent by url' do
+            expect(subject.test_connect_to_agent( agent.url )).to be_truthy
         end
     end
 
     describe '#connect_to_instance' do
         it 'connects to an instance' do
-            dispatcher.dispatch
+            agent.spawn
             instance = subject.instances.first
 
             expect(subject.test_connect_to_instance( instance )).to be_falsey

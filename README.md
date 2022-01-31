@@ -10,8 +10,8 @@ _Cloud_ within a _Cloud_.
 
 It offers:
 
-* Load-balancing of _**Instances**_ via a software mesh network (_**Grid**_) of _**Dispatchers**_.
-  * No need to setup a topology manually, _**Dispatchers**_ will reach
+* Load-balancing of _**Instances**_ via a network (_**Grid**_) of _**Agents**_.
+  * No need to setup a topology manually, _**Agents**_ will reach
     convergence on their own, just point them to an existing _**Grid**_ member.
   * Scaling up and down can be easily achieved by _plugging_ or _unplugging_ nodes.
   * Horizontal (`default`) and vertical workload distribution strategies available.
@@ -58,7 +58,7 @@ framework:
     * `:restore`
   * `instance_service_for( Symbol, Class )` -- Adds a custom _**Instance**_ RPC API.
   * `rest_service_for( Symbol, Module )` -- Hooks-up to the _**REST**_ service to provide a custom REST API.
-  * `dispatcher_service_for( Symbol, Class )` -- Hooks-up to the _**Dispatcher**_ to provide a custom RPC API.
+  * `agent_service_for( Symbol, Class )` -- Hooks-up to the _**Agent**_ to provide a custom RPC API.
   * `serialize_with( Module )` -- A serializer to be used for:
     * `#options`
     * `Report#data`
@@ -84,10 +84,10 @@ This is in order to enforce isolation (_state_, _data_, _fault_) between
 _**Applications**_, take advantage of _OS_ task management and generally keep
 things simple.
 
-### Dispatcher
+### Agent
 
-A _**Dispatcher**_ is a server which awaits for _**Instance**_ spawn requests
-(`dispatch` calls) upon which it spawns and passes the _**Instance**_'s
+A _**Agent**_ is a server which awaits for _**Instance**_ spawn requests
+(`spawn` calls) upon which it spawns and passes the _**Instance**_'s
 connection info to the client.
 
 The client can then proceed to use the _**Instance**_ to run and generally manage
@@ -95,7 +95,7 @@ the contained _**Application**_.
 
 #### Grid
 
-A _**Dispatcher**_ _**Grid**_ is a software mesh network of _**Dispatcher**_
+A _**Agent**_ _**Grid**_ is a software mesh network of _**Agent**_
 servers, aimed towards providing automated _load-balancing_ based on available
 system resources and each _**Application**_'s provisioning configuration.
 
@@ -104,11 +104,11 @@ providing any existing _**Grid**_ member upon start-up and the rest will be
 sorted out automatically.
 
 The network is _self-healing_ and will monitor _node_ connectivity, taking steps
-to ensure that neither server nor network conditions will disrupt dispatching.
+to ensure that neither server nor network conditions will disrupt spawning.
 
 ##### Scalability
 
-_**Dispatchers**_ can be easily _plugged_ to or _unplugged_ from the _**Grid**_
+_**Agents**_ can be easily _plugged_ to or _unplugged_ from the _**Grid**_
 to scale up or down as necessary.
 
 _Plugging_ happens at boot-time and _unplugging_ can take place via the available
@@ -125,12 +125,12 @@ The _**Scheduler**_ is a server which:
   5. Upon _**Application**_ completion stores report to disk.
   6. Shuts down the _**Instance**_.
 
-#### Dispatcher
+#### Agent
 
-The _**Scheduler**_ can be configured with a _**Dispatcher**_, upon which case,
+The _**Scheduler**_ can be configured with a _**Agent**_, upon which case,
 it will use it to spawn _**Instances**_.
 
-If the _**Dispatcher**_ is a _**Grid**_ member then the _**Scheduler**_ will
+If the _**Agent**_ is a _**Grid**_ member then the _**Scheduler**_ will
 also enjoy _load-balancing_ features. 
 
 ## APIs
@@ -154,7 +154,7 @@ RPC interface.
 A REST API is also available, taking advantage of HTTP sessions to make progress
 tracking easier.
 
-The REST interface is basically a web _**Dispatcher**_ and centralised point of
+The REST interface is basically a web _**Agent**_ and centralised point of
 management for the rest of the entities.
 
 Each _**Application**_ can extend upon this and expose an API via its _**REST**_ 

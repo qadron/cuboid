@@ -1,15 +1,15 @@
-class Cuboid::RPC::Server::Dispatcher
+class Cuboid::RPC::Server::Agent
 class Service::Echo < Service
 
     private :instances
     public  :instances
 
-    def test_dispatcher
-        dispatcher.class == Cuboid::RPC::Server::Dispatcher
+    def test_agent
+        agent.class == Cuboid::RPC::Server::Agent
     end
 
     def test_opts
-        dispatcher.instance_eval{ @options } == options
+        agent.instance_eval{ @options } == options
     end
 
     def test_node
@@ -38,8 +38,8 @@ class Service::Echo < Service
         iterator_for( instances ).class == Arachni::Reactor::Iterator
     end
 
-    def test_connect_to_dispatcher( url, &block )
-        connect_to_dispatcher( url ).alive? { |b| block.call b }
+    def test_connect_to_agent( url, &block )
+        connect_to_agent( url ).alive? { |b| block.call b }
     end
 
     def test_connect_to_instance( *args, &block )

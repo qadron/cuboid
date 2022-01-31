@@ -8,24 +8,24 @@ module Grid
     def self.registered( app )
 
         app.get '/grid' do
-            ensure_dispatcher!
+            ensure_agent!
 
             handle_error do
-                json [Options.dispatcher.url] + dispatcher.statistics['node']['neighbours']
+                json [Options.agent.url] + agent.statistics['node']['peers']
             end
         end
 
-        app.get '/grid/:dispatcher' do |url|
-            ensure_dispatcher!
+        app.get '/grid/:agent' do |url|
+            ensure_agent!
 
-            handle_error { json connect_to_dispatcher( url ).statistics }
+            handle_error { json connect_to_agent( url ).statistics }
         end
 
-        app.delete '/grid/:dispatcher' do |url|
-            ensure_dispatcher!
+        app.delete '/grid/:agent' do |url|
+            ensure_agent!
 
             handle_error do
-                unplug_dispatcher( url )
+                unplug_agent( url )
             end
 
             json nil

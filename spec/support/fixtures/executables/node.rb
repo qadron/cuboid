@@ -1,14 +1,14 @@
 require Options.paths.lib + 'ui/output'
-require Options.paths.lib + 'rpc/server/dispatcher'
+require Options.paths.lib + 'rpc/server/agent'
 require Options.paths.lib + 'processes/manager'
 
-class Node < Cuboid::RPC::Server::Dispatcher::Node
+class Node < Cuboid::RPC::Server::Agent::Node
 
     def initialize
         @options = Options.instance
 
         methods.each do |m|
-            next if method( m ).owner != Cuboid::RPC::Server::Dispatcher::Node
+            next if method( m ).owner != Cuboid::RPC::Server::Agent::Node
             self.class.send :private, m
             self.class.send :public, m
         end

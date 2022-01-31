@@ -6,7 +6,7 @@ require lib + 'processes/manager'
 require lib + 'processes/instances'
 
 require lib + 'rpc/client/instance'
-require lib + 'rpc/client/dispatcher'
+require lib + 'rpc/client/agent'
 
 require lib + 'rpc/server/base'
 require lib + 'rpc/server/output'
@@ -33,9 +33,9 @@ class Server
 # * {#attach Attached} to the queue monitor and transfer the management
 #   responsibility to the queue.
 #
-# If a {Dispatcher} has been provided, {Instance instances} will be
-# {Dispatcher#dispatch provided} by it.
-# If no {Dispatcher} has been given, {Instance instances} will be spawned on the
+# If a {Agent} has been provided, {Instance instances} will be
+# {Agent#spawn provided} by it.
+# If no {Agent} has been given, {Instance instances} will be spawned on the
 # Scheduler machine.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
@@ -379,7 +379,7 @@ class Scheduler
         end
     end
 
-    # Starts the dispatcher's server
+    # Starts the agent's server
     def run
         reactor.on_error do |_, e|
             print_error "Reactor: #{e}"
@@ -415,16 +415,16 @@ class Scheduler
         )
     end
 
-    def dispatcher
-        return if !Options.dispatcher.url
-        @dispatcher ||= RPC::Client::Dispatcher.new( Options.dispatcher.url )
+    def agent
+        return if !Options.agent.url
+        @agent ||= RPC::Client::Agent.new( Options.agent.url )
     end
 
     def spawn_instance( &block )
-        if dispatcher
+        if agent
             options = {
               owner:    self.class.to_s,
-              strategy: Cuboid::Options.dispatcher.strategy,
+              strategy: Cuboid::Options.agent.strategy,
               helpers: {
                     owner: {
                         url: @url
@@ -432,9 +432,9 @@ class Scheduler
                 }
             }
 
-            dispatcher.dispatch options do |info|
+            agent.spawn options do |info|
                 if info.rpc_exception?
-                    print_error "Failed to contact Dispatcher at: #{dispatcher.url}"
+                    print_error "Failed to contact Agent at: #{agent.url}"
                     print_error "[#{info.class}] #{info.to_s}"
                     block.call :error
                     next

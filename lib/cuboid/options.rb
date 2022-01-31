@@ -76,7 +76,7 @@ class Options
     require_relative 'option_groups'
 
     TO_RPC_IGNORE = Set.new([
-        :instance, :rpc, :dispatcher, :queue, :paths,
+        :instance, :rpc, :agent, :queue, :paths,
         :snapshot, :report, :output, :system
     ])
 

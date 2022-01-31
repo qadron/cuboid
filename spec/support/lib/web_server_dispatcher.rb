@@ -9,7 +9,7 @@ require 'arachni/rpc'
 # Exposes the {WebServerManager} over RPC.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class WebServerDispatcher
+class WebServerAgent
 
     def initialize( options = {} )
         host, port = ENV['WEB_SERVER_DISPATCHER'].split( ':' )

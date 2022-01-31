@@ -5,7 +5,7 @@ require Options.paths.lib + 'rpc/client/base'
 module RPC
 class Client
 
-# RPC client for remote instances spawned by a remote dispatcher
+# RPC client for remote instances spawned by a remote agent
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
 class Instance
@@ -47,7 +47,7 @@ class Instance
         @instance = Proxy.new( @client )
         @options  = Arachni::RPC::Proxy.new( @client, 'options' )
 
-        # map Dispatcher handlers
+        # map Agent handlers
         Cuboid::Application.application.instance_services.keys.each do |name|
             self.class.send( :attr_reader, name.to_sym )
 

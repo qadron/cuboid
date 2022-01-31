@@ -36,8 +36,8 @@ class MyApp < Cuboid::Application
     # Hook-up to the REST service to expose a custom API.
     rest_service_for       :custom, RESTAPI
 
-    # Hook-up to the Dispatcher to expose a custom RPC API.
-    dispatcher_service_for :custom, Aggregator
+    # Hook-up to the Agent to expose a custom RPC API.
+    agent_service_for :custom, Aggregator
 
     # RPC, report data, options and runtime snapshot.
     #

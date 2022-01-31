@@ -2,9 +2,9 @@ require 'arachni/rpc'
 
 # @note Needs `ENV['WEB_SERVER_DISPATCHER']` in the format of `host:port`.
 #
-# {WebServerManager}-API-compatible client for the {WebServerDispatcher}.
+# {WebServerManager}-API-compatible client for the {WebServerAgent}.
 #
-# Delegates test webserver creation to the machine running {WebServerDispatcher},
+# Delegates test webserver creation to the machine running {WebServerAgent},
 # for hosts that lack support for fast servers (like Windows, which can't run
 # Thin, Puma etc.).
 #

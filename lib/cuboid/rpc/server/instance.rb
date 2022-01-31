@@ -90,10 +90,10 @@ class Instance
     end
 
     # @return   [String, nil]
-    #   Dispatcher URL that provided this Instance, `nil` if not provided by a
-    #   Dispatcher.
-    def dispatcher_url
-        @options.dispatcher.url
+    #   Agent URL that provided this Instance, `nil` if not provided by a
+    #   Agent.
+    def agent_url
+        @options.agent.url
     end
 
     # @param (see Cuboid::Application#restore)

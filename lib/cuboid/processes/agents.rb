@@ -2,28 +2,28 @@ module Cuboid
 module Processes
 
 #
-# Helper for managing {RPC::Server::Dispatcher} processes.
+# Helper for managing {RPC::Server::Agent} processes.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
 #
-class Dispatchers
+class Agents
     include Singleton
     include Utilities
 
-    # @return   [Array<String>] URLs of all running Dispatchers.
+    # @return   [Array<String>] URLs of all running Agents.
     attr_reader :list
 
     def initialize
         @list = []
-        @dispatcher_connections = {}
+        @agent_connections = {}
     end
 
-    # Connects to a Dispatcher by URL.
+    # Connects to a Agent by URL.
     #
-    # @param    [String]    url URL of the Dispatcher.
+    # @param    [String]    url URL of the Agent.
     # @param    [Hash]    options Options for the RPC client.
     #
-    # @return   [RPC::Client::Dispatcher]
+    # @return   [RPC::Client::Agent]
     def connect( url, options = nil )
         Arachni::Reactor.global.run_in_thread if !Arachni::Reactor.global.running?
 
@@ -33,26 +33,26 @@ class Dispatchers
         end
 
         if fresh
-            @dispatcher_connections[url] = RPC::Client::Dispatcher.new( url, options )
+            @agent_connections[url] = RPC::Client::Agent.new( url, options )
         else
-            @dispatcher_connections[url] ||= RPC::Client::Dispatcher.new( url, options )
+            @agent_connections[url] ||= RPC::Client::Agent.new( url, options )
         end
     end
 
-    # @param    [Block] block   Block to pass an RPC client for each Dispatcher.
+    # @param    [Block] block   Block to pass an RPC client for each Agent.
     def each( &block )
         @list.each do |url|
             block.call connect( url )
         end
     end
 
-    # Spawns a {RPC::Server::Dispatcher} process.
+    # Spawns a {RPC::Server::Agent} process.
     #
     # @param    [Hash]  options
     #   To be passed to {Cuboid::Options#set}. Allows `address` instead of
     #   `rpc_server_address` and `port` instead of `rpc_port`.
     #
-    # @return   [RPC::Client::Dispatcher]
+    # @return   [RPC::Client::Agent]
     def spawn( options = {} )
         options = options.dup
         fork = options.delete(:fork)
@@ -63,9 +63,9 @@ class Dispatchers
         }
 
         options = {
-            dispatcher: {
+            agent: {
                 name:      options[:name],
-                neighbour: options[:neighbour],
+                peer: options[:peer],
                 strategy:  options[:strategy],
             },
             rpc:        {
@@ -88,11 +88,11 @@ class Dispatchers
             options[:rpc].delete :server_external_address
         end
 
-        if options[:dispatcher][:neighbour].nil?
-            options[:dispatcher].delete :neighbour
+        if options[:agent][:peer].nil?
+            options[:agent].delete :peer
         end
 
-        pid = Manager.spawn( :dispatcher, options: options, fork: fork )
+        pid = Manager.spawn( :agent, options: options, fork: fork )
 
         url = "#{options[:rpc][:server_address]}:#{options[:rpc][:server_port]}"
         while sleep( 0.1 )
@@ -110,26 +110,26 @@ class Dispatchers
 
     def grid_spawn( options = {} )
         d = spawn( options )
-        spawn( options.merge neighbour: d.url )
+        spawn( options.merge peer: d.url )
     end
 
-    # @note Will also kill all Instances started by the Dispatcher.
+    # @note Will also kill all Instances started by the Agent.
     #
-    # @param    [String]    url URL of the Dispatcher to kill.
+    # @param    [String]    url URL of the Agent to kill.
     def kill( url )
-        dispatcher = connect( url )
-        Manager.kill_many dispatcher.statistics['consumed_pids']
-        Manager.kill dispatcher.pid
+        agent = connect( url )
+        Manager.kill_many agent.statistics['consumed_pids']
+        Manager.kill agent.pid
     rescue => e
         #ap e
         #ap e.backtrace
         nil
     ensure
         @list.delete( url )
-        @dispatcher_connections.delete( url )
+        @agent_connections.delete( url )
     end
 
-    # Kills all {Dispatchers #list}.
+    # Kills all {Agents #list}.
     def killall
         @list.dup.each do |url|
             kill url

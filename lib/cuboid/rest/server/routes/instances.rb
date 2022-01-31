@@ -16,7 +16,7 @@ module Instances
 
         # Create
         app.post '/instances' do
-            max_utilization! if !dispatcher && System.max_utilization?
+            max_utilization! if !agent && System.max_utilization?
 
             options = ::JSON.load( request.body.read ) || {}
 

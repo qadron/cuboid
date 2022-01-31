@@ -10,19 +10,19 @@ ap '=' * 80
 puts
 
 # Spawn a single instance just for us to play with; test it maybe or some such.
-instance = MyApp.spawn( :instance )
+myapp = MyApp.spawn( :instance )
 
 # Access to the custom RPC API.
-ap instance.custom.foo
+ap myapp.custom.foo
 # "bar"
 
-ap instance.progress
+ap myapp.progress
 # {
 #   :status => :ready,
 #   :busy => false,
-#   :application => "CuboidApp",
+#   :application => "MyApp",
 #   :seed => "13100eef17435089c7c8f887e076d6e2",
-#   :dispatcher_url => nil,
+#   :agent_url => nil,
 #   :scheduler_url => nil,
 #   :statistics => {
 #     :runtime => 0
@@ -31,7 +31,7 @@ ap instance.progress
 # }
 
 # Run and provide options.
-instance.run( id: [1, 2, 3] )
+myapp.run( id: [1, 2, 3] )
 # :run
 # [
 #   [0] 1,
@@ -40,11 +40,11 @@ instance.run( id: [1, 2, 3] )
 # ]
 
 # Custom RPC API call that accesses the application.
-ap instance.custom.application_access
+ap myapp.custom.application_access
 # "foobar"
 
 # Get the native Cuboid::Report to access the Instances results.
-ap instance.generate_report.data
+ap myapp.generate_report.data
 # [
 #   [0] 1,
 #   [1] 2,
@@ -52,35 +52,35 @@ ap instance.generate_report.data
 # ]
 
 # Don't forget to shutdown Instances once you're done.
-instance.shutdown
+myapp.shutdown
 
 
 puts
 ap '=' * 80
-ap "#{'-' * 34} Dispatcher #{'-' * 34}"
+ap "#{'-' * 34} Agent #{'-' * 34}"
 ap '=' * 80
 puts
 
-# Setup a Dispatcher to provide Instances to us.
-dispatcher = MyApp.spawn( :dispatcher )
+# Setup a Agent to provide Instances to us.
+agent = MyApp.spawn( :agent )
 
 # This will call our custom aggregator service, no Instances yet though.
-ap dispatcher.custom.foo
+ap agent.custom.foo
 # {}
-ap dispatcher.custom.application_access
+ap agent.custom.application_access
 # {}
 
 5.times do |i|
-    instance_info = dispatcher.dispatch
+    myapp_info = agent.spawn
 
-    instance = MyApp.connect(instance_info )
-    instance.run( id: i )
+    myapp = MyApp.connect( myapp_info )
+    myapp.run( id: i )
     # :run
     # 0
 
     # This will call our custom aggregator service.
     # At the last run it will show something like:
-    ap dispatcher.custom.foo
+    ap agent.custom.foo
     # {
     #     "127.0.0.1:63967" => "bar",
     #      "127.0.0.1:8414" => "bar",
@@ -88,7 +88,7 @@ ap dispatcher.custom.application_access
     #     "127.0.0.1:40270" => "bar",
     #     "127.0.0.1:44070" => "bar"
     # }
-    ap dispatcher.custom.application_access
+    ap agent.custom.application_access
     # {
     #     "127.0.0.1:63967" => "foobar",
     #      "127.0.0.1:8414" => "foobar",
@@ -104,40 +104,40 @@ ap "#{'-' * 37} Grid #{'-' * 37}"
 ap '=' * 80
 puts
 
-# Cooler still, setup a Dispatcher Grid to provide Instances and load-balancing.
+# Cooler still, setup a Agent Grid to provide Instances and load-balancing.
 #
-# Of course in a real setup each Dispatcher would be on its own machine.
+# Of course in a real setup each Agent would be on its own machine.
 grid = []
 
 # 1st node.
-grid << MyApp.spawn( :dispatcher )
+grid << MyApp.spawn( :agent )
 
 # 2nd node.
 #
-# All that needs to be done is to pass one of the others as a neighbour and
+# All that needs to be done is to pass one of the others as a peer and
 # they'll mesh it up themselves.
-grid << MyApp.spawn( :dispatcher, neighbour: grid.sample.url )
+grid << MyApp.spawn( :agent, peer: grid.sample.url )
 
 # 3rd node.
-grid << MyApp.spawn( :dispatcher, neighbour: grid.sample.url )
+grid << MyApp.spawn( :agent, peer: grid.sample.url )
 
 5.times do |i|
-    # Pick Dispatchers at random; not necessary but fun.
+    # Pick Agents at random; not necessary but fun.
     node = grid.sample
 
-    # This will be an Instance from the least burdened Dispatcher machine, not
+    # This will be an Instance from the least burdened Agent machine, not
     # necessarily the one we asked -- well, here they are all on the same
     # machine but you get the point.
-    instance_info = node.dispatch
+    app_info = node.spawn
 
     # There are 2 available strategies for workload distribution:
-    #   * Horizontal (default) -- Provides Instances from the least burdened Dispatcher.
-    #       * node.dispatch( strategy: horizontal )
-    #   * Vertical  -- Provides Instances from the most burdened Dispatcher.
-    #       * node.dispatch( strategy: vertical )
+    #   * Horizontal (default) -- Provides Instances from the least burdened Agent.
+    #       * node.spawn( strategy: horizontal )
+    #   * Vertical  -- Provides Instances from the most burdened Agent.
+    #       * node.spawn( strategy: vertical )
 
-    instance = MyApp.connect( instance_info )
-    instance.run( id: [i, node.url] )
+    myapp = MyApp.connect( app_info )
+    myapp.run( id: [i, node.url] )
     # :run
     # [
     #   [0] 0,
@@ -152,12 +152,12 @@ grid.each do |node|
 end
 
 # Point is, we don't need to setup a topology manually nor do we care which
-# Dispatcher we're using at any given time, the Grid will strive for best
+# Agent we're using at any given time, the Grid will strive for best
 # results for us.
 
-# Dispatchers don't expose their #shutdown method, programatically, we need
+# Agents don't expose their #shutdown method, programatically, we need
 # to get a bit harsh.
-Dispatchers.killall
+Agents.killall
 
 puts
 ap '=' * 80
@@ -166,11 +166,11 @@ ap '=' * 80
 puts
 
 # Schedulers can be used to spawn and manage Instances from the same machine,
-# a Dispatcher or a Dispatcher Grid.
+# a Agent or a Agent Grid.
 #
 # Basically, you can push Instance options to the Scheduler and that's it.
-# If the Scheduler is configured with a Dispatcher then it'll get Instances from
-# there, and if the Dispatcher is part of a Grid then we'll also enjoy load-balancing.
+# If the Scheduler is configured with a Agent then it'll get Instances from
+# there, and if the Agent is part of a Grid then we'll also enjoy load-balancing.
 #
 # Else, Instances are spawned on the same machine by the Scheduler itself.
 scheduler = MyApp.spawn( :scheduler )
@@ -189,9 +189,9 @@ end
 
 # If one already has an Instance, management can be handed over to the Scheduler
 # at any time.
-instance = MyApp.spawn( :instance )
-scheduler.attach instance.url, instance.token
-instance.run( id: [1, 2, 3] )
+myapp = MyApp.spawn( :instance )
+scheduler.attach myapp.url, myapp.token
+myapp.run( id: [1, 2, 3] )
 # :run
 # [
 #   [0] 1,

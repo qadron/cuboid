@@ -21,7 +21,7 @@ class MockApp < Cuboid::Application
     # RPC, report and snapshot file.
     serialize_with Marshal
 
-    dispatcher_service_for :test_service, TestService
+    agent_service_for :test_service, TestService
 
     # Execution entry point.
     def run

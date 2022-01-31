@@ -111,7 +111,7 @@ class ApplicationWrapper
             busy:           running?,
             application:    @application.class.to_s,
             seed:           Utilities.random_seed,
-            dispatcher_url: Cuboid::Options.dispatcher.url,
+            agent_url: Cuboid::Options.agent.url,
             scheduler_url:  Cuboid::Options.scheduler.url
         }
 

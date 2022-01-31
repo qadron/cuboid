@@ -23,7 +23,7 @@ class Server < Sinatra::Base
     end
 
     register Routes::Instances
-    register Routes::Dispatcher
+    register Routes::Agent
     register Routes::Grid
     register Routes::Scheduler
 
@@ -81,9 +81,9 @@ class Server < Sinatra::Base
             halt 404, json( "Scan not found for id: #{h id}." )
         end
 
-        def ensure_dispatcher!
-            return if dispatcher
-            halt 501, json( 'No Dispatcher has been set.' )
+        def ensure_agent!
+            return if agent
+            halt 501, json( 'No Agent has been set.' )
         end
 
         def ensure_scheduler!
@@ -114,7 +114,7 @@ class Server < Sinatra::Base
 
         def reset
             @@instances.clear
-            @@dispatchers.clear
+            @@agents.clear
         end
 
         def run!( options )

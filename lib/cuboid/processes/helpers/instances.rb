@@ -10,10 +10,10 @@ def instance_grid_spawn( *args )
     Cuboid::Processes::Instances.grid_spawn( *args )
 end
 
-# @param (see Cuboid::Processes::Instances#dispatcher_spawn)
-# @return (see Cuboid::Processes::Instances#dispatcher_spawn)
-def instance_dispatcher_spawn( *args )
-    Cuboid::Processes::Instances.dispatcher.spawn( *args )
+# @param (see Cuboid::Processes::Instances#agent_spawn)
+# @return (see Cuboid::Processes::Instances#agent_spawn)
+def instance_agent_spawn( *args )
+    Cuboid::Processes::Instances.agent.spawn( *args )
 end
 
 def instance_kill( url )

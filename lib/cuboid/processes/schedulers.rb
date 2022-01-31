@@ -61,8 +61,8 @@ class Schedulers
         }
 
         options = {
-            dispatcher: {
-                url:      options[:dispatcher],
+            agent: {
+                url:      options[:agent],
                 strategy: options[:strategy]
             },
             rpc:        {

@@ -52,20 +52,20 @@ describe Cuboid::RPC::Server::Scheduler do
         end
     end
 
-    context 'when a Dispatcher has been set' do
-        subject { Cuboid::Processes::Schedulers.spawn dispatcher: dispatcher.url }
-        let(:dispatcher) do
-            Cuboid::Processes::Dispatchers.spawn( application: "#{fixtures_path}/mock_app.rb" )
+    context 'when a Agent has been set' do
+        subject { Cuboid::Processes::Schedulers.spawn agent: agent.url }
+        let(:agent) do
+            Cuboid::Processes::Agents.spawn( application: "#{fixtures_path}/mock_app.rb" )
         end
 
         it 'gets Instances from it' do
-            expect(dispatcher.finished_instances).to be_empty
+            expect(agent.finished_instances).to be_empty
 
             subject.push( options )
             sleep 0.1 while subject.completed.empty?
             sleep 2
 
-            expect(dispatcher.finished_instances).to be_any
+            expect(agent.finished_instances).to be_any
         end
 
         it 'sets OptionGroups::Scheduler#url' do
@@ -80,7 +80,7 @@ describe Cuboid::RPC::Server::Scheduler do
             it 'does not consume the queue' do
                 subject
 
-                Cuboid::Processes::Dispatchers.killall
+                Cuboid::Processes::Agents.killall
                 sleep 3
 
                 expect(subject.size).to be 0
@@ -89,7 +89,7 @@ describe Cuboid::RPC::Server::Scheduler do
                 sleep 5
 
                 expect(subject.size).to be 1
-                expect(subject.errors.join("\n")).to include "Failed to contact Dispatcher at: #{dispatcher.url}"
+                expect(subject.errors.join("\n")).to include "Failed to contact Agent at: #{agent.url}"
             end
         end
     end

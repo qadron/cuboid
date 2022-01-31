@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'fileutils'
 
-describe Cuboid::RPC::Client::Dispatcher do
-    subject { dispatcher_spawn application: "#{fixtures_path}/mock_app.rb" }
+describe Cuboid::RPC::Client::Agent do
+    subject { agent_spawn application: "#{fixtures_path}/mock_app.rb" }
 
     describe '#node' do
         it 'provides access to the node data' do

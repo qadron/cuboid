@@ -14,24 +14,24 @@ class Server
 #
 # The process goes something like this:
 #
-# * A client issues a {#dispatch} call.
-# * The Dispatcher spawns and returns Instance info to the client (url, auth token, etc.).
+# * A client issues a {#spawn} call.
+# * The Agent spawns and returns Instance info to the client (url, auth token, etc.).
 # * The client connects to the Instance using that info.
 #
 # Once the client finishes using the RPC Instance it *must* shut it down
 # otherwise the system will be eaten away by zombie processes.
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Dispatcher
-    require Options.paths.lib + 'rpc/server/dispatcher/node'
-    require Options.paths.lib + 'rpc/server/dispatcher/service'
+class Agent
+    require Options.paths.lib + 'rpc/server/agent/node'
+    require Options.paths.lib + 'rpc/server/agent/service'
 
     include Utilities
     include UI::Output
 
     SERVICE_NAMESPACE = Service
 
-    PREFERENCE_STRATEGIES = Cuboid::OptionGroups::Dispatcher::STRATEGIES
+    PREFERENCE_STRATEGIES = Cuboid::OptionGroups::Agent::STRATEGIES
 
     def initialize( options = Options.instance )
         @options = options
@@ -46,20 +46,20 @@ class Dispatcher
             method.parameters.flatten.include? :block
         end
 
-        Options.dispatcher.url = @url = @server.url
+        Options.agent.url = @url = @server.url
 
         prep_logging
 
         print_status 'Starting the RPC Server...'
 
-        @server.add_handler( 'dispatcher', self )
+        @server.add_handler( 'agent', self )
 
         # trap interrupts and exit cleanly when required
         trap_interrupts { shutdown }
 
         @instances = []
 
-        Cuboid::Application.application.dispatcher_services.each do |name, service|
+        Cuboid::Application.application.agent_services.each do |name, service|
             @server.add_handler( name.to_s, service.new( @options, self ) )
         end
 
@@ -70,7 +70,7 @@ class Dispatcher
     end
 
     def services
-        Cuboid::Application.application.dispatcher_services.keys
+        Cuboid::Application.application.agent_services.keys
     end
 
     # @return   [TrueClass]
@@ -80,17 +80,17 @@ class Dispatcher
     end
 
     # @param    [Symbol]    strategy
-    #   `:horizontal` -- Pick the Dispatcher with the least amount of workload.
-    #   `:vertical` -- Pick the Dispatcher with the most amount of workload.
+    #   `:horizontal` -- Pick the Agent with the least amount of workload.
+    #   `:vertical` -- Pick the Agent with the most amount of workload.
     #
     # @return   [String, nil]
     #   Depending on strategy and availability:
     #
-    #   * URL of the preferred Dispatcher. If not a grid member it will return
-    #       this Dispatcher's URL.
+    #   * URL of the preferred Agent. If not a grid member it will return
+    #       this Agent's URL.
     #   * `nil` if all nodes are at max utilization or on error.
     #   * `ArgumentError` -- On invalid `strategy`.
-    def preferred( strategy = Cuboid::Options.dispatcher.strategy, &block )
+    def preferred( strategy = Cuboid::Options.agent.strategy, &block )
         strategy = strategy.to_sym
         if !PREFERENCE_STRATEGIES.include? strategy
             block.call :error_unknown_strategy
@@ -117,9 +117,9 @@ class Dispatcher
             end
         end
 
-        each = proc do |neighbour, iter|
-            connect_to_peer( neighbour ).utilization do |utilization|
-                iter.return pick_utilization.call( neighbour, utilization )
+        each = proc do |peer, iter|
+            connect_to_peer( peer ).utilization do |utilization|
+                iter.return pick_utilization.call( peer, utilization )
             end
         end
 
@@ -136,25 +136,26 @@ class Dispatcher
             block.call nodes.sort_by { |_, score| adjust_score_by_strategy.call score }[0][0]
         end
 
-        Arachni::Reactor.global.create_iterator( @node.neighbours ).map( each, after )
+        Arachni::Reactor.global.create_iterator( @node.peers ).map( each, after )
     end
 
     # Dispatches an {Instance}.
     #
-    # @param    [String]  owner
+    # @param    [String]  options
+    # @option    [String]  strategy
+    # @option    [String]  owner
     #   An owner to assign to the {Instance}.
-    # @param    [Hash]    helpers
+    # @option    [Hash]    helpers
     #   Hash of helper data to be added to the instance info.
-    # @param    [Boolean]    load_balance
-    #   Return an {Instance} from the least burdened {Dispatcher} (when in Grid mode)
-    #   or from this one directly?
+    # @option    [Boolean]    load_balance
+    #   Use the Grid (when available) or this one directly?
     #
     # @return   [Hash, nil]
     #   Depending on availability:
     #
     #   * `Hash`: Connection and proc info.
     #   * `nil`: Max utilization, wait for one of the instances to finish and retry.
-    def dispatch( options = {}, &block )
+    def spawn( options = {}, &block )
         options      = options.my_symbolize_keys
         strategy     = options.delete(:strategy)
         owner        = options[:owner]
@@ -173,7 +174,7 @@ class Dispatcher
                     next
                 end
 
-                connect_to_peer( url ).dispatch( options.merge(
+                connect_to_peer( url ).spawn( options.merge(
                       helpers: helpers.merge( via: @url ),
                       load_balance: false
                     ),
@@ -243,7 +244,7 @@ class Dispatcher
     end
 
     # @return   [Float]
-    #   Workload score for this Dispatcher, calculated using {System#utilization}.
+    #   Workload score for this Agent, calculated using {System#utilization}.
     #
     #   * `0.0` => No utilization.
     #   * `1.0` => Max utilization.
@@ -285,7 +286,7 @@ class Dispatcher
         end
     end
 
-    # Starts the dispatcher's server
+    # Starts the agent's server
     def run
         Arachni::Reactor.global.on_error do |_, e|
             print_error "Reactor: #{e}"
@@ -314,7 +315,7 @@ class Dispatcher
     def spawn_instance( options = {}, &block )
         Processes::Instances.spawn( options.merge(
             address:     @server.address,
-            port_range:  Options.dispatcher.instance_port_range,
+            port_range:  Options.agent.instance_port_range,
             token:       Utilities.generate_token,
             application: Options.paths.application
         )) do |client|
@@ -331,12 +332,12 @@ class Dispatcher
     def prep_logging
         # reroute all output to a logfile
         @logfile ||= reroute_to_file( @options.paths.logs +
-            "/Dispatcher - #{Process.pid}-#{@options.rpc.server_port}.log" )
+            "/Agent - #{Process.pid}-#{@options.rpc.server_port}.log" )
     end
 
     def connect_to_peer( url )
         @rpc_clients ||= {}
-        @rpc_clients[url] ||= Client::Dispatcher.new( url )
+        @rpc_clients[url] ||= Client::Agent.new( url )
     end
 
 end
