@@ -182,7 +182,7 @@ describe Cuboid::Rest::Server do
             context 'when a running instance completes' do
                 it 'is removed' do
                     scheduler.push( options )
-                    sleep 0.1 while scheduler.completed.empty?
+                    sleep 0.1 while !scheduler.completed.empty?
 
                     get url
                     expect(response_data).to be_empty
