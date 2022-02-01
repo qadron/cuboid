@@ -1,4 +1,5 @@
 require_relative 'rpc/serializer'
+require 'time'
 
 module Cuboid
 
