@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'forwardable'
 
 module Cuboid
 
