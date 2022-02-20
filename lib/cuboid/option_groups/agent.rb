@@ -5,7 +5,7 @@ module Cuboid::OptionGroups
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
 class Agent < Cuboid::OptionGroup
 
-    STRATEGIES = Set.new([:horizontal, :vertical])
+    STRATEGIES = Set.new([:horizontal, :vertical, :direct])
 
     # @return   [String]
     #   URL of a {RPC::Server::Agent}.

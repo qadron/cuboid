@@ -82,6 +82,7 @@ class Agent
     # @param    [Symbol]    strategy
     #   `:horizontal` -- Pick the Agent with the least amount of workload.
     #   `:vertical` -- Pick the Agent with the most amount of workload.
+    #   `:direct` -- Bypass the grid and get an Instance directly from this agent.
     #
     # @return   [String, nil]
     #   Depending on strategy and availability:
@@ -97,7 +98,7 @@ class Agent
             raise ArgumentError, "Unknown strategy: #{strategy}"
         end
 
-        if !@node.grid_member?
+        if strategy == :direct || !@node.grid_member?
             block.call( self.utilization == 1 ? nil : @url )
             return
         end
@@ -139,7 +140,7 @@ class Agent
         Arachni::Reactor.global.create_iterator( @node.peers ).map( each, after )
     end
 
-    # Dispatches an {Instance}.
+    # Spawns an {Instance}.
     #
     # @param    [String]  options
     # @option    [String]  strategy
@@ -147,22 +148,24 @@ class Agent
     #   An owner to assign to the {Instance}.
     # @option    [Hash]    helpers
     #   Hash of helper data to be added to the instance info.
-    # @option    [Boolean]    load_balance
-    #   Use the Grid (when available) or this one directly?
     #
     # @return   [Hash, nil]
     #   Depending on availability:
     #
     #   * `Hash`: Connection and proc info.
-    #   * `nil`: Max utilization, wait for one of the instances to finish and retry.
+    #   * `nil`: Max utilization or currently spawning, wait and retry.
     def spawn( options = {}, &block )
+        if @spawning
+            block.call nil
+            return
+        end
+
         options      = options.my_symbolize_keys
         strategy     = options.delete(:strategy)
         owner        = options[:owner]
         helpers      = options[:helpers] || {}
-        load_balance = options[:load_balance].nil? ? true : options[:load_balance]
 
-        if load_balance && @node.grid_member?
+        if strategy != 'direct' && @node.grid_member?
             preferred *[strategy].compact do |url|
                 if !url
                     block.call
@@ -175,8 +178,8 @@ class Agent
                 end
 
                 connect_to_peer( url ).spawn( options.merge(
-                      helpers: helpers.merge( via: @url ),
-                      load_balance: false
+                      helpers:  helpers.merge( via: @url ),
+                      strategy: :direct
                     ),
                     &block
                 )
@@ -189,6 +192,7 @@ class Agent
             return
         end
 
+        @spawning = true
         spawn_instance do |info|
             info['owner']   = owner
             info['helpers'] = helpers
@@ -196,6 +200,8 @@ class Agent
             @instances << info
 
             block.call info
+
+            @spawning = false
         end
     end
 
