@@ -204,7 +204,7 @@ describe Cuboid::Rest::Server do
                 post url, invalid: 'blah'
 
                 expect(response_code).to eq 500
-                expect(response_data['error']).to eq 'Arachni::RPC::Exceptions::RemoteException'
+                expect(response_data['error']).to eq 'Toq::Exceptions::RemoteException'
                 expect(response_data).to include 'backtrace'
             end
 
@@ -658,7 +658,7 @@ describe Cuboid::Rest::Server do
             it 'returns 500' do
                 put url, 'localhost:383838'
                 expect(response_code).to eq 500
-                expect(response_data['error']).to eq 'Arachni::RPC::Exceptions::ConnectionError'
+                expect(response_data['error']).to eq 'Toq::Exceptions::ConnectionError'
             end
         end
     end
@@ -821,7 +821,7 @@ describe Cuboid::Rest::Server do
                     post url, invalid: 'blah'
 
                     expect(response_code).to eq 500
-                    expect(response_data['error']).to eq 'Arachni::RPC::Exceptions::RemoteException'
+                    expect(response_data['error']).to eq 'Toq::Exceptions::RemoteException'
                     expect(response_data).to include 'backtrace'
                 end
             end
@@ -876,7 +876,7 @@ describe Cuboid::Rest::Server do
                 put url, 'localhost:393939'
 
                 expect(response_code).to eq 500
-                expect(response_data['error']).to eq 'Arachni::RPC::Exceptions::ConnectionError'
+                expect(response_data['error']).to eq 'Toq::Exceptions::ConnectionError'
                 expect(response_data['description']).to include 'Connection closed'
             end
         end
@@ -992,7 +992,7 @@ describe Cuboid::Rest::Server do
 
                 get url
                 expect(response_data.size).to be 1
-                expect(response_data[@id]['error']).to eq 'Arachni::RPC::Exceptions::ConnectionError'
+                expect(response_data[@id]['error']).to eq 'Toq::Exceptions::ConnectionError'
                 expect(response_data[@id]['description']).to include 'Connection closed [Connection refused - connect(2) for'
             end
         end

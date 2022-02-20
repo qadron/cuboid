@@ -28,7 +28,7 @@ class Instances
     # @return   [RPC::Client::Instance]
     #
     def connect( url, token = nil )
-        Arachni::Reactor.global.run_in_thread if !Arachni::Reactor.global.running?
+        Raktr.global.run_in_thread if !Raktr.global.running?
 
         token ||= @list[url]
         @list[url] ||= token

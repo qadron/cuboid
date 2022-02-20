@@ -30,7 +30,7 @@ class Node < Cuboid::RPC::Server::Agent::Node
     end
 
     def shutdown
-        Arachni::Reactor.global.delay 1 do
+        Raktr.global.delay 1 do
             Process.kill( 'KILL', Process.pid )
         end
     end
@@ -41,10 +41,10 @@ class Node < Cuboid::RPC::Server::Agent::Node
 
     def self.connect_to_peer( url )
         c = Cuboid::RPC::Client::Base.new( url )
-        Arachni::RPC::Proxy.new( c, 'node' )
+        Toq::Proxy.new( c, 'node' )
     end
 end
 
-Arachni::Reactor.global.run do
+Raktr.global.run do
     Node.new
 end

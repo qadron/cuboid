@@ -5,7 +5,7 @@ require "#{fixtures_path}/mock_app"
 describe 'Cuboid::RPC::Server::Instance' do
     let(:subject) { instance_spawn( application: "#{fixtures_path}/mock_app.rb" ) }
 
-    it 'supports UNIX sockets', if: Arachni::Reactor.supports_unix_sockets? do
+    it 'supports UNIX sockets', if: Raktr.supports_unix_sockets? do
         socket = "#{Dir.tmpdir}/cuboid-instance-#{Cuboid::Utilities.generate_token}"
         subject = instance_spawn(
           socket:      socket,
@@ -239,7 +239,7 @@ describe 'Cuboid::RPC::Server::Instance' do
             it 'raises ArgumentError' do
                 expect do
                     subject.run invalid: :stuff
-                end.to raise_error Arachni::RPC::Exceptions::RemoteException
+                end.to raise_error Toq::Exceptions::RemoteException
             end
         end
 
@@ -300,7 +300,7 @@ describe 'Cuboid::RPC::Server::Instance' do
             expect(subject.shutdown).to be_truthy
             sleep 4
 
-            expect { subject.alive? }.to raise_error Arachni::RPC::Exceptions::ConnectionError
+            expect { subject.alive? }.to raise_error Toq::Exceptions::ConnectionError
         end
     end
 

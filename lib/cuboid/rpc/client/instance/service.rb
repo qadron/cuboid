@@ -5,7 +5,7 @@ class Client
 class Instance
 
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Proxy < Arachni::RPC::Proxy
+class Proxy < Toq::Proxy
 
     def initialize( client )
         super client, 'instance'

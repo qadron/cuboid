@@ -2,7 +2,7 @@ require_relative '../../../lib/cuboid/processes/manager'
 require_relative '../../../lib/cuboid/processes/helpers'
 require_relative '../../support/helpers/paths'
 require_relative 'web_server_manager'
-require 'arachni/rpc'
+require 'toq'
 
 # @note Needs `ENV['WEB_SERVER_DISPATCHER']` in the format of `host:port`.
 #

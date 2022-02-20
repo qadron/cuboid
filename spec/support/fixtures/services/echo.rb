@@ -35,7 +35,7 @@ class Service::Echo < Service
     end
 
     def test_iterator_for
-        iterator_for( instances ).class == Arachni::Reactor::Iterator
+        iterator_for( instances ).class == Raktr::Iterator
     end
 
     def test_connect_to_agent( url, &block )

@@ -293,7 +293,7 @@ describe Cuboid::RPC::Server::Scheduler do
             process_kill( subject.running.values.first['pid'] )
             sleep 0.1 while subject.failed.empty?
 
-            expect(subject.failed[id]['error']).to eq 'Arachni::RPC::Exceptions::ConnectionError'
+            expect(subject.failed[id]['error']).to eq 'Toq::Exceptions::ConnectionError'
             expect(subject.failed[id]['description']).to include 'Connection closed'
         end
     end
@@ -339,7 +339,7 @@ describe Cuboid::RPC::Server::Scheduler do
             it 'raises ArgumentError' do
                 expect do
                     subject.push invalid: :test
-                end.to raise_error Arachni::RPC::Exceptions::RemoteException
+                end.to raise_error Toq::Exceptions::RemoteException
             end
         end
 
@@ -394,7 +394,7 @@ describe Cuboid::RPC::Server::Scheduler do
 
             expect do
                 subject.alive?
-            end.to raise_error Arachni::RPC::Exceptions::ConnectionError
+            end.to raise_error Toq::Exceptions::ConnectionError
         end
     end
 end

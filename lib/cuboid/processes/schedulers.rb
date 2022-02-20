@@ -23,7 +23,7 @@ class Schedulers
     #
     # @return   [RPC::Client::Scheduler]
     def connect( url, options = nil )
-        Arachni::Reactor.global.run_in_thread if !Arachni::Reactor.global.running?
+        Raktr.global.run_in_thread if !Raktr.global.running?
 
         fresh = false
         if options

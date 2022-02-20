@@ -11,11 +11,11 @@ describe Cuboid::RPC::Server::Agent::Node do
         c = Cuboid::RPC::Client::Base.new(
             "#{Cuboid::Options.rpc.server_address}:#{port}"
         )
-        c = Arachni::RPC::Proxy.new( c, 'node' )
+        c = Toq::Proxy.new( c, 'node' )
 
         begin
             c.alive?
-        rescue Arachni::RPC::Exceptions::ConnectionError
+        rescue Toq::Exceptions::ConnectionError
             sleep 0.1
             retry
         end

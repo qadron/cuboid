@@ -1,5 +1,5 @@
 require 'ostruct'
-require 'arachni/rpc'
+require 'toq'
 require_relative '../serializer'
 
 module Cuboid
@@ -10,7 +10,7 @@ class Server
 #
 # @private
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Base < Arachni::RPC::Server
+class Base < Toq::Server
 
     # @param    [Hash]   options
     # @option options [Integer]  :host

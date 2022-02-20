@@ -18,7 +18,7 @@ class Server
     end
 
     def start
-        Arachni::Reactor.global.run_in_thread if !Arachni::Reactor.global.running?
+        Raktr.global.run_in_thread if !Raktr.global.running?
         @server.start
         sleep( 0.1 ) while !@server.ready?
     end
@@ -86,7 +86,7 @@ describe Cuboid::RPC::Client::Base do
                         begin
                             client = described_class.new( server.url, nil, client_ssl_options )
                             client.call( "foo.bar" )
-                        rescue Arachni::RPC::Exceptions::ConnectionError
+                        rescue Toq::Exceptions::ConnectionError
                             raised = true
                         end
 
@@ -102,7 +102,7 @@ describe Cuboid::RPC::Client::Base do
                         begin
                             client = described_class.new( server.url, nil, empty_options )
                             client.call( "foo.bar" )
-                        rescue Arachni::RPC::Exceptions::ConnectionError
+                        rescue Toq::Exceptions::ConnectionError
                             raised = true
                         end
 
@@ -137,7 +137,7 @@ describe Cuboid::RPC::Client::Base do
                         begin
                             client = described_class.new( server.url, nil, empty_options )
                             client.call( "foo.bar" )
-                        rescue Arachni::RPC::Exceptions::InvalidToken
+                        rescue Toq::Exceptions::InvalidToken
                             raised = true
                         end
 

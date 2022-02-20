@@ -74,7 +74,7 @@ class Instance
             trap( signal ){ shutdown if !@options.datastore.do_not_trap }
         end
 
-        Arachni::Reactor.global.run do
+        Raktr.global.run do
             _run
         end
     end
@@ -294,7 +294,7 @@ class Instance
 
     # Starts  RPC service.
     def _run
-        Arachni::Reactor.global.on_error do |_, e|
+        Raktr.global.on_error do |_, e|
             print_error "Reactor: #{e}"
 
             e.backtrace.each do |l|

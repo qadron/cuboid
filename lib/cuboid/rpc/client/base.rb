@@ -1,4 +1,4 @@
-require 'arachni/rpc'
+require 'toq'
 require_relative '../serializer'
 
 module Cuboid
@@ -6,7 +6,7 @@ module RPC
 class Client
 
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class Base < Arachni::RPC::Client
+class Base < Toq::Client
     attr_reader :url
 
     # @param    [String]    url

@@ -137,7 +137,7 @@ class Agent
             block.call nodes.sort_by { |_, score| adjust_score_by_strategy.call score }[0][0]
         end
 
-        Arachni::Reactor.global.create_iterator( @node.peers ).map( each, after )
+        Raktr.global.create_iterator( @node.peers ).map( each, after )
     end
 
     # Spawns an {Instance}.
@@ -294,7 +294,7 @@ class Agent
 
     # Starts the agent's server
     def run
-        Arachni::Reactor.global.on_error do |_, e|
+        Raktr.global.on_error do |_, e|
             print_error "Reactor: #{e}"
 
             e.backtrace.each do |l|
@@ -314,7 +314,7 @@ class Agent
     def shutdown
         Thread.new do
             print_status 'Shutting down...'
-            Arachni::Reactor.global.stop
+            Raktr.global.stop
         end
     end
 

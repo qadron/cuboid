@@ -1,5 +1,5 @@
 require 'singleton'
-require 'arachni/reactor'
+require 'raktr'
 
 module Cuboid
 module Processes
@@ -156,7 +156,7 @@ class Manager
 
     # Stops the Reactor.
     def kill_reactor
-        Arachni::Reactor.stop
+        Raktr.stop
     rescue
         nil
     end

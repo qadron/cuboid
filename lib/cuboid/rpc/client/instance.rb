@@ -24,10 +24,10 @@ class Instance
             )
 
             client = new( url, token, options )
-            Arachni::Reactor.global.delay( 0.1 ) do |task|
+            Raktr.global.delay( 0.1 ) do |task|
                 client.alive? do |r|
                     if r.rpc_exception?
-                        Arachni::Reactor.global.delay( 0.1, &task )
+                        Raktr.global.delay( 0.1, &task )
                         next
                     end
 
@@ -45,7 +45,7 @@ class Instance
         @client   = Base.new( url, token, options )
 
         @instance = Proxy.new( @client )
-        @options  = Arachni::RPC::Proxy.new( @client, 'options' )
+        @options  = Toq::Proxy.new( @client, 'options' )
 
         # map Agent handlers
         Cuboid::Application.application.instance_services.keys.each do |name|
@@ -53,7 +53,7 @@ class Instance
 
             instance_variable_set(
               "@#{name}".to_sym,
-              Arachni::RPC::Proxy.new( @client, name )
+              Toq::Proxy.new( @client, name )
             )
         end
     end

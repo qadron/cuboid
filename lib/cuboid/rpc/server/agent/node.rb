@@ -65,7 +65,7 @@ class Server::Agent::Node
 
         log_updated_peers
 
-        Arachni::Reactor.global.at_interval( @options.agent.ping_interval ) do
+        Raktr.global.at_interval( @options.agent.ping_interval ) do
             ping
             check_for_comebacks
         end
@@ -152,7 +152,7 @@ class Server::Agent::Node
                 block.call( @nodes_info_cache )
             end
 
-            Arachni::Reactor.global.create_iterator( peers ).map( each, after )
+            Raktr.global.create_iterator( peers ).map( each, after )
         else
             block.call( @nodes_info_cache )
         end

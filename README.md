@@ -30,7 +30,7 @@ It offers:
 * Developer freedom.
   * Apart from keeping _Data_ and _State_ separate not many other rules to follow.
     * Only if interested in _suspensions_ and can also be left to the last minute
-      if necessary -- in cases of Ractor enforced isolation  for example.
+      if necessary -- in cases of `Ractor` enforced isolation for example.
 
 ## Entities
 
@@ -144,7 +144,7 @@ _**Application**_ itself.
 
 A simple RPC is employed, specs for 3rd party implementations can be found at:
 
-https://github.com/Arachni/arachni-rpc/wiki
+https://github.com/toq/arachni-rpc/wiki
 
 Each _**Application**_ can extend upon this and expose an API via its _**Instance**_'s 
 RPC interface.

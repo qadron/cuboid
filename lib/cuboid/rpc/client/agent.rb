@@ -16,14 +16,14 @@ class Agent
 
     def initialize( url, options = nil )
         @client = Base.new( url, nil, options )
-        @node   = Arachni::RPC::Proxy.new( @client, 'node' )
+        @node   = Toq::Proxy.new( @client, 'node' )
 
         Cuboid::Application.application.agent_services.keys.each do |name|
             self.class.send( :attr_reader, name.to_sym )
 
             instance_variable_set(
               "@#{name}".to_sym,
-              Arachni::RPC::Proxy.new( @client, name )
+              Toq::Proxy.new( @client, name )
             )
         end
     end

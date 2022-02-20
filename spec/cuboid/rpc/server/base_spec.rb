@@ -3,7 +3,7 @@ require "#{Cuboid::Options.paths.lib}/rpc/server/base"
 
 describe Cuboid::RPC::Server::Base do
     before( :each ) do
-        Arachni::Reactor.global.run_in_thread
+        Raktr.global.run_in_thread
     end
 
     let(:subject) { Cuboid::RPC::Server::Base.new(
@@ -11,7 +11,7 @@ describe Cuboid::RPC::Server::Base do
     ) }
     let(:port) { available_port }
 
-    it 'supports UNIX sockets', if: Arachni::Reactor.supports_unix_sockets? do
+    it 'supports UNIX sockets', if: Raktr.supports_unix_sockets? do
         server = Cuboid::RPC::Server::Base.new(
             socket: "#{Dir.tmpdir}/cuboid-base-#{Cuboid::Utilities.generate_token}"
         )

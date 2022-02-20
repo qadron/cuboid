@@ -399,7 +399,7 @@ class Scheduler
     end
 
     def reactor
-        Arachni::Reactor.global
+        Raktr.global
     end
 
     def trap_interrupts( &block )

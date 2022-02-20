@@ -45,7 +45,7 @@ class Server::Agent::Service
     # Performs an asynchronous map operation over all running instances.
     #
     # @param [Proc]  each
-    #   Block to be passed {Client::Instance} and `Arachni::Reactor::Iterator`.
+    #   Block to be passed {Client::Instance} and `Raktr::Iterator`.
     # @param [Proc]  after
     #   Block to be passed the Array of results.
     def map_instances( each, after )
@@ -58,7 +58,7 @@ class Server::Agent::Service
     # Performs an asynchronous iteration over all running instances.
     #
     # @param [Proc]  block
-    #   Block to be passed {Client::Instance} and `Arachni::Reactor::Iterator`.
+    #   Block to be passed {Client::Instance} and `Raktr::Iterator`.
     def each_instance( &block )
         wrap = proc do |instance, iterator|
             block.call( connect_to_instance( instance ), iterator )
@@ -88,15 +88,15 @@ class Server::Agent::Service
     #
     # @param    [Block] block
     def run_asap( &block )
-        Arachni::Reactor.global.next_tick( &block )
+        Raktr.global.next_tick( &block )
     end
 
     # @param    [Array]    list
     #
-    # @return   [Arachni::Reactor::Iterator]
+    # @return   [Raktr::Iterator]
     #   Iterator for the provided array.
     def iterator_for( list, max_concurrency = 10 )
-        Arachni::Reactor.global.create_iterator( list, max_concurrency )
+        Raktr.global.create_iterator( list, max_concurrency )
     end
 
     # @return   [Array<Hash>]

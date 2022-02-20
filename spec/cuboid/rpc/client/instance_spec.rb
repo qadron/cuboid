@@ -16,7 +16,7 @@ describe Cuboid::RPC::Client::Instance do
                 it 'should fail to connect' do
                     expect do
                         described_class.new( subject.url, 'blah' ).alive?
-                    end.to raise_error Arachni::RPC::Exceptions::InvalidToken
+                    end.to raise_error Toq::Exceptions::InvalidToken
                 end
             end
         end

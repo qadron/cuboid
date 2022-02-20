@@ -1,4 +1,4 @@
-require 'arachni/rpc'
+require 'toq'
 
 # @note Needs `ENV['WEB_SERVER_DISPATCHER']` in the format of `host:port`.
 #
@@ -9,15 +9,15 @@ require 'arachni/rpc'
 # Thin, Puma etc.).
 #
 # @author Tasos "Zapotek" Laskos <tasos.laskos@gmail.com>
-class WebServerClient < Arachni::RPC::Proxy
+class WebServerClient < Toq::Proxy
     include Singleton
 
     def initialize( options = {} )
         @host, port = ENV['WEB_SERVER_DISPATCHER'].split( ':' )
 
-        Arachni::Reactor.global.run_in_thread if !Arachni::Reactor.global.running?
+        Raktr.global.run_in_thread if !Raktr.global.running?
 
-        client = Arachni::RPC::Client.new( host: @host, port: port )
+        client = Toq::Client.new( host: @host, port: port )
         super client, 'server'
     end
 
