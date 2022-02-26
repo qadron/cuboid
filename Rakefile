@@ -55,3 +55,20 @@ task :clean do
     files.each { |file| puts "  * #{file}" }
     FileUtils.rm files
 end
+
+desc 'Build the gem.'
+task build: [ :clean ] do
+    sh "gem build cuboid.gemspec"
+end
+
+desc 'Build and install the gem.'
+task install: [ :build ] do
+    sh "gem install cuboid-#{Cuboid::VERSION}.gem"
+end
+
+desc 'Push a new version to Rubygems'
+task publish: [ :build ] do
+    sh "git tag -a v#{Cuboid::VERSION} -m 'Version #{Cuboid::VERSION}'"
+    sh "gem push cuboid-#{Cuboid::VERSION}.gem"
+end
+task release: [ :publish ]
