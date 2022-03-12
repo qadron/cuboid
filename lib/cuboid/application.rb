@@ -174,7 +174,7 @@ class Application
                 last_const = last_const.const_get( const_name.to_sym )
             end
 
-            last_const.const_source_location( app.to_sym ).first
+            File.expand_path last_const.const_source_location( app.to_sym ).first
         end
 
         def spawn( type, options = {}, &block )
