@@ -1,3 +1,7 @@
+# 0.1.5
+
+* Fixed relative path for application source path detection.
+
 # 0.1.3
 
 * Replaced `Arachni::RPC` and `Arachni::Reactor` with `Toq` and `Raktr`.
