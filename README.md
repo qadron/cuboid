@@ -162,9 +162,12 @@ service's interface.
 
 ## Examples
 
-### Full application
+### MyApp
 
-See `examples/`.
+Tutorial application going over different APIs and **Cuboid** _**Application**_
+options and specification.
+
+See `examples/my_app`.
 
 ### Parallel code on same host
 
@@ -283,12 +286,6 @@ sleep 0.1 while sleepers.map(&:busy?).include?( true )
 
 
 _You can replace `host1` with `localhost` and run all examples on the same terminal._
-
-### MyApp
-
-Tutorial application going over different APIs and **Cuboid** _**Application**_
-options and specification.
-
 
 ## License
 
