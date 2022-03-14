@@ -110,10 +110,6 @@ class Application
         @status == :timed_out
     end
 
-    # @param    [Bool]  block
-    #   `true` if the method should block until an abortion has completed,
-    #   `false` otherwise.
-    #
     # @return   [Bool]
     #   `true` if the abort request was successful, `false` if the system is
     #   already {#suspended?} or is {#suspending?}.
