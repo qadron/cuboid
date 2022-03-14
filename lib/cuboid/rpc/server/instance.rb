@@ -123,7 +123,6 @@ class Instance
     #
     # @see #report
     def abort_and_generate_report
-        @application.clean_up
         @application.abort!
         generate_report
     end
