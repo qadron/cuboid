@@ -203,7 +203,7 @@ describe 'Cuboid::RPC::Server::Instance' do
     end
 
     describe '#abort_and_generate_report' do
-        it "cleans-up and returns the report as #{Cuboid::Report}", focus: true do
+        it "cleans-up and returns the report as #{Cuboid::Report}" do
             subject.run
 
             expect(subject.abort_and_generate_report).to be_kind_of Cuboid::Report
