@@ -111,8 +111,6 @@ describe 'Cuboid::RPC::Server::Instance' do
             subject = instance_spawn
             subject.restore! snapshot_path
 
-            File.delete snapshot_path
-
             sleep 1 while subject.status != :done
 
             expect(subject.generate_report.options).to eq(options)

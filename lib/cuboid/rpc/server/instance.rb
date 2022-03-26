@@ -102,7 +102,10 @@ class Instance
     # @see #suspend
     # @see #snapshot_path
     def restore!( snapshot )
-        @application.restore!( snapshot ).run
+        Thread.new do
+            @application.restore!( snapshot ).run
+        end
+
         true
     end
 
@@ -205,8 +208,10 @@ class Instance
 
         @active_options.set( application: options )
 
-        @application.run
-        @run_initializing = false
+        Thread.new do
+            @application.run
+            @run_initializing = false
+        end
 
         true
     end
