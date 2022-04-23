@@ -79,6 +79,10 @@ class RPC < Cuboid::OptionGroup
         server_port:          7331
     )
 
+    def url
+        "#{server_address}:#{server_port}"
+    end
+
     def to_client_options
         {
             connection_pool_size: connection_pool_size,

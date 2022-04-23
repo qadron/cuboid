@@ -1,3 +1,7 @@
+# 0.1.6.1
+
+* `OptionGroups::RPC`: Added `#url`.
+
 # 0.1.5
 
 * Fixed relative path for application source path detection.
