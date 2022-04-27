@@ -1,3 +1,8 @@
+# 0.1.7
+
+* `Application`
+  * Added `#shutdown` callback method to handle RPC server shutdowns.
+
 # 0.1.6.1
 
 * `OptionGroups::RPC`: Added `#url`.

@@ -67,6 +67,10 @@ class Application
             true
         end
 
+        def shutdown
+            super if defined? super
+        end
+
         private
 
         # @note Must be called before calling any audit methods.

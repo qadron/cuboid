@@ -226,6 +226,8 @@ class Instance
 
         print_status 'Shutting down...'
 
+        @application.shutdown
+
         # We're shutting down services so we need to use a concurrent way but
         # without going through the Reactor.
         Thread.new do

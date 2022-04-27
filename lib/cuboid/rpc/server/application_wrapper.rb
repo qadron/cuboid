@@ -19,7 +19,7 @@ class ApplicationWrapper
     def_delegators :@application, :suspended?, :suspending?, :suspend!, :status,
                    :pause!, :running?, :status_messages, :paused?, :pausing?,
                    :snapshot_path, :restore!, :resume!, :generate_report,
-                   :abort!, :aborting?, :aborted?
+                   :abort!, :aborting?, :aborted?, :shutdown
 
     # {RPC::Server::Application} error namespace.
     #
