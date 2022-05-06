@@ -1,3 +1,8 @@
+# 0.1.8
+
+* `Processes::Manager`
+  * `#find_in_applications` -- Also include `PATH` search.
+
 # 0.1.7
 
 * `Application`
