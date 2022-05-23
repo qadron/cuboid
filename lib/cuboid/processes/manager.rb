@@ -86,10 +86,12 @@ class Manager
         @find_in_applications ||= {}
         return @find_in_applications[bin] if @find_in_applications.include?( bin )
 
-        [
-            '/Applications/*/Contents/MacOS'
-        ].each do |root|
-            glob = File.join( root, '**', bin )
+        paths = ENV['PATH'].split( File::PATH_SEPARATOR ) | [
+          '/Applications/'
+        ]
+
+        paths.each do |root|
+            glob = File.join( "#{root}/*/Contents/MacOS", '**', bin )
 
             exe = Dir.glob( glob ).find { |f| File.executable?( f ) }
             return @find_in_applications[bin] = exe if exe
