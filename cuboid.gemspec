@@ -43,9 +43,9 @@ Gem::Specification.new do |s|
     s.add_dependency 'msgpack',             '1.1.0'
 
     # Web server
-    s.add_dependency 'puma',                '5.6.4'
+    s.add_dependency 'puma',                '5.6.2'
 
-    s.add_dependency 'rack',                '2.2.3'
+    s.add_dependency 'rack',                '2.2.3.1'
     s.add_dependency 'rack-test'
 
     # REST API
