@@ -23,7 +23,7 @@ It offers:
   * Suspend to disk is a cinch by automatically creating a _**snapshot**_
     of the runtime environment of the application and storing it to disk
     for later restoration of state and data.
-    * Also allows for running job transfers.
+    * **Also allows for running job transfers.**
 * Management of Instances via RPC or REST APIs.
     * Aside from what **Cuboid** uses, custom serializers can be specified for
       application related objects.
