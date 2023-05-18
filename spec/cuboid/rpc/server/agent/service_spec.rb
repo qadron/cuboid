@@ -7,7 +7,7 @@ describe Cuboid::RPC::Server::Agent::Service do
         Cuboid::Options.system.max_slots = 10
     end
     let(:instance_count) { 3 }
-    let(:agent) { agent_spawn application: "#{fixtures_path}/mock_app.rb" }
+    let(:agent) { agent_spawn application: "#{fixtures_path}/mock_app.rb", daemonize: true }
     let(:subject) { agent.test_service }
 
     describe '#agent' do

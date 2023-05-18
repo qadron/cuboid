@@ -4,8 +4,8 @@ require Cuboid::Options.paths.lib + 'rpc/client/instance'
 require Cuboid::Options.paths.lib + 'rpc/server/instance'
 
 describe Cuboid::RPC::Server::ActiveOptions do
-    let(:instance) { instance_spawn application: "#{fixtures_path}/mock_app.rb" }
-    
+    let(:instance) { instance_spawn application: "#{fixtures_path}/mock_app.rb", daemonize: true }
+
     describe '#set' do
         it 'sets options by hash' do
             opts = {

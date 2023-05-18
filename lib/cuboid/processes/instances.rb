@@ -65,6 +65,7 @@ class Instances
         token = options.delete(:token) || Utilities.generate_token
         fork  = options.delete(:fork)
 
+        daemonize  = options.delete(:daemonize)
         port_range = options.delete( :port_range )
 
         options[:ssl] ||= {
@@ -99,7 +100,7 @@ class Instances
             url = "#{options[:rpc][:server_address]}:#{options[:rpc][:server_port]}"
         end
 
-        pid = Manager.spawn( :instance, options: options, token: token, fork: fork )
+        pid = Manager.spawn( :instance, options: options, token: token, fork: fork, daemonize: daemonize )
 
         System.slots.use pid
 

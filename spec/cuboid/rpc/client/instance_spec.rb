@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Cuboid::RPC::Client::Instance do
 
-    let(:subject) { instance_spawn application: "#{fixtures_path}/mock_app.rb" }
+    let(:subject) { instance_spawn application: "#{fixtures_path}/mock_app.rb", daemonize: true }
 
     context 'when connecting to an instance' do
         context 'which requires a token' do

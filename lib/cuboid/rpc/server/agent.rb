@@ -323,7 +323,8 @@ class Agent
             address:     @server.address,
             port_range:  Options.agent.instance_port_range,
             token:       Utilities.generate_token,
-            application: Options.paths.application
+            application: Options.paths.application,
+            daemonize:   true
         )) do |client|
             block.call(
                 'token'       => client.token,

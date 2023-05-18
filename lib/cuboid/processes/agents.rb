@@ -56,6 +56,7 @@ class Agents
     def spawn( options = {} )
         options = options.dup
         fork = options.delete(:fork)
+        daemonize = options.delete(:daemonize)
 
         options[:ssl] ||= {
           server: {},
@@ -92,7 +93,7 @@ class Agents
             options[:agent].delete :peer
         end
 
-        pid = Manager.spawn( :agent, options: options, fork: fork )
+        pid = Manager.spawn( :agent, options: options, fork: fork, daemonize: daemonize )
 
         url = "#{options[:rpc][:server_address]}:#{options[:rpc][:server_port]}"
         while sleep( 0.1 )

@@ -1,3 +1,8 @@
+# 0.2
+
+* `Processes::Manager`
+  * `#spawn` -- Daemonize servers optionally -- default turned to `false`.
+
 # 0.1.8
 
 * `Processes::Manager`

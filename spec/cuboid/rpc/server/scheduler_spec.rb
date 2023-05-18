@@ -8,7 +8,7 @@ describe Cuboid::RPC::Server::Scheduler do
         Cuboid::Options.scheduler.ping_interval = 0.5
     end
 
-    subject { scheduler_spawn( application: "#{fixtures_path}/mock_app.rb" ) }
+    subject { scheduler_spawn( application: "#{fixtures_path}/mock_app.rb", daemonize: true ) }
     let(:options) { {} }
 
     context 'when there are queued scans' do
@@ -53,9 +53,9 @@ describe Cuboid::RPC::Server::Scheduler do
     end
 
     context 'when a Agent has been set' do
-        subject { Cuboid::Processes::Schedulers.spawn agent: agent.url }
+        subject { Cuboid::Processes::Schedulers.spawn agent: agent.url, daemonize: true }
         let(:agent) do
-            Cuboid::Processes::Agents.spawn( application: "#{fixtures_path}/mock_app.rb" )
+            Cuboid::Processes::Agents.spawn( application: "#{fixtures_path}/mock_app.rb", daemonize: true )
         end
 
         it 'gets Instances from it' do
@@ -211,7 +211,7 @@ describe Cuboid::RPC::Server::Scheduler do
     end
 
     describe '#attach' do
-        let(:client) { instance_spawn( application: "#{fixtures_path}/mock_app.rb" ) }
+        let(:client) { instance_spawn( application: "#{fixtures_path}/mock_app.rb", daemonize: true ) }
 
         it 'attaches a running Instance to the queue' do
             expect(subject.attach( client.url, client.token )).to eq client.token
@@ -249,7 +249,7 @@ describe Cuboid::RPC::Server::Scheduler do
                 subject.attach( client.url, client.token )
                 expect(client.scheduler_url).to eq subject.url
 
-                q = scheduler_spawn
+                q = scheduler_spawn( daemonize: true )
 
                 expect(q.attach( client.url, client.token )).to be_falsey
                 expect(client.scheduler_url).to eq subject.url

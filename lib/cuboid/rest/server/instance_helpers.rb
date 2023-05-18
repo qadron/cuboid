@@ -22,7 +22,7 @@ module InstanceHelpers
                 connect_to_instance( info['url'], info['token'] )
             end
         else
-            Processes::Instances.spawn( application: Options.paths.application )
+            Processes::Instances.spawn( application: Options.paths.application, daemonize: true )
         end
     end
 

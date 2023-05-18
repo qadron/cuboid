@@ -456,6 +456,7 @@ class Scheduler
             Processes::Instances.spawn(
                 application: Options.paths.application,
                 port_range:  Options.scheduler.instance_port_range,
+                daemonize:   true,
                 &block
             )
         end

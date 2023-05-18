@@ -174,6 +174,7 @@ See `examples/my_app`.
 To run code in parallel on the same machine utilising multiple cores, with each
 instance isolated to its own process, you can use something like the following:
 
+`sleeper.rb`:
 ```ruby
 require 'cuboid'
 
@@ -184,13 +185,15 @@ class Sleeper < Cuboid::Application
     end
 
 end
+```
 
-return if $0 != __FILE__
+```ruby
+require_relative 'sleeper'
 
 sleepers = []
-sleepers << Sleeper.spawn( :instance )
-sleepers << Sleeper.spawn( :instance )
-sleepers << Sleeper.spawn( :instance )
+sleepers << Sleeper.spawn( :instance, daemonize: true )
+sleepers << Sleeper.spawn( :instance, daemonize: true )
+sleepers << Sleeper.spawn( :instance, daemonize: true )
 
 sleepers.each do |sleeper|
     sleeper.run( time: 5 )
@@ -212,17 +215,7 @@ In this example we'll be using `Agents` to spawn instances from 3 different host
 #### Host 1
 
 ```ruby
-require 'cuboid'
-
-class Sleeper < Cuboid::Application
-
-    def run
-        sleep options['time']
-    end
-
-end
-
-return if $0 != __FILE__
+require_relative 'sleeper'
 
 Sleeper.spawn( :agent, port: 7331 )
 ```
@@ -232,17 +225,7 @@ Sleeper.spawn( :agent, port: 7331 )
 #### Host 2
 
 ```ruby
-require 'cuboid'
-
-class Sleeper < Cuboid::Application
-
-    def run
-        sleep options['time']
-    end
-
-end
-
-return if $0 != __FILE__
+require_relative 'sleeper'
 
 Sleeper.spawn( :agent, port: 7332, peer: 'host1:7331' )
 ```
@@ -252,19 +235,9 @@ Sleeper.spawn( :agent, port: 7332, peer: 'host1:7331' )
 #### Host 3
 
 ```ruby
-require 'cuboid'
+require_relative 'sleeper'
 
-class Sleeper < Cuboid::Application
-
-    def run
-        sleep options['time']
-    end
-
-end
-
-return if $0 != __FILE__
-
-grid_agent = Sleeper.spawn( :agent, port: 7333, peer: 'host1:7331' )
+grid_agent = Sleeper.spawn( :agent, port: 7333, peer: 'host1:7331', daemonize: true )
 
 sleepers = []
 3.times do
@@ -285,7 +258,7 @@ sleep 0.1 while sleepers.map(&:busy?).include?( true )
     sys     0m0,091s
 
 
-_You can replace `host1` with `localhost` and run all examples on the same terminal._
+_You can replace `host1` with `localhost` and run all examples on the same machine._
 
 ## License
 

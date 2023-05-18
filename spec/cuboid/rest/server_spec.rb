@@ -15,8 +15,8 @@ describe Cuboid::Rest::Server do
     let(:id) { @id }
     let(:non_existent_id) { 'stuff' }
 
-    let(:agent) { Cuboid::Processes::Agents.spawn }
-    let(:scheduler) { Cuboid::Processes::Schedulers.spawn }
+    let(:agent) { Cuboid::Processes::Agents.spawn daemonize: true }
+    let(:scheduler) { Cuboid::Processes::Schedulers.spawn daemonize: true }
 
     def create_instance
         post '/instances', options
@@ -52,7 +52,7 @@ describe Cuboid::Rest::Server do
             Cuboid::Options.datastore['password'] = password
 
             Cuboid::Options.rpc.server_port = Cuboid::Utilities.available_port
-            Cuboid::Processes::Manager.spawn( :rest_service )
+            Cuboid::Processes::Manager.spawn( :rest_service, daemonize: true )
 
             sleep 0.1 while Typhoeus.get( url ).code == 0
         end
@@ -97,7 +97,7 @@ describe Cuboid::Rest::Server do
             Cuboid::Options.rpc.server_ssl_certificate = ssl_cert
 
             Cuboid::Options.rpc.server_port = Cuboid::Utilities.available_port
-            Cuboid::Processes::Manager.spawn( :rest_service )
+            Cuboid::Processes::Manager.spawn( :rest_service, daemonize: true )
 
             sleep 0.1 while Typhoeus.get( url ).return_code == :couldnt_connect
         end
@@ -687,7 +687,7 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'GET /grid' do
-        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn daemonize: true }
         let(:tpl_url) { '/grid' }
 
         it 'returns Grid info' do
@@ -709,7 +709,7 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'GET /grid/:agent' do
-        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn daemonize: true }
         let(:tpl_url) { '/grid/%s' }
 
         it 'returns Agent info' do
@@ -735,7 +735,7 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'DELETE /grid/:agent' do
-        let(:agent) { Cuboid::Processes::Agents.grid_spawn }
+        let(:agent) { Cuboid::Processes::Agents.grid_spawn daemonize: true }
         let(:tpl_url) { '/grid/%s' }
 
         it 'unplugs the Agent from the Grid' do

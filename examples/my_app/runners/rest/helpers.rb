@@ -1,4 +1,5 @@
 require 'typhoeus'
+require 'json'
 
 def response
     if @last_response.headers['Content-Type'].include? 'json'

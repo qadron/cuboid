@@ -10,7 +10,7 @@ describe Cuboid::RPC::Server::Agent do
 
     let(:instance_info_keys) { %w(token application pid url owner birthdate helpers now age) }
     let(:slots) { 3 }
-    let(:subject) { agent_spawn( application: "#{fixtures_path}/mock_app.rb" ) }
+    let(:subject) { agent_spawn( application: "#{fixtures_path}/mock_app.rb", daemonize: true ) }
 
     describe '#alive?' do
         it 'returns true' do
@@ -23,8 +23,8 @@ describe Cuboid::RPC::Server::Agent do
             context 'and strategy is' do
                 context :horizontal do
                     it 'returns the URL of least burdened Agent' do
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
 
                         expect(subject.preferred( :horizontal )).to eq(subject.url)
                     end
@@ -32,8 +32,8 @@ describe Cuboid::RPC::Server::Agent do
 
                 context :vertical do
                     it 'returns the URL of most burdened Agent' do
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
-                        d = agent_spawn( peer: subject.url )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
+                        d = agent_spawn( peer: subject.url, daemonize: true )
                         d.spawn( strategy: :direct )
                         d.spawn( strategy: :direct )
 
@@ -47,8 +47,8 @@ describe Cuboid::RPC::Server::Agent do
 
                 context 'default' do
                     it 'returns the URL of least burdened Agent' do
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
 
                         expect(subject.preferred).to eq(subject.url)
                     end
@@ -56,8 +56,8 @@ describe Cuboid::RPC::Server::Agent do
 
                 context 'other' do
                     it 'returns :error_unknown_strategy' do
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
-                        agent_spawn( peer: subject.url ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
+                        agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
 
                         expect(subject.preferred( :blah )).to eq('error_unknown_strategy')
                     end
@@ -72,8 +72,8 @@ describe Cuboid::RPC::Server::Agent do
                 let(:slots) { 1 }
 
                 it 'returns nil' do
-                    agent_spawn( peer: subject.url ).spawn( strategy: :direct )
-                    agent_spawn( peer: subject.url ).spawn( strategy: :direct )
+                    agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
+                    agent_spawn( peer: subject.url, daemonize: true ).spawn( strategy: :direct )
 
                     expect(subject.preferred).to be_nil
                 end
@@ -200,7 +200,8 @@ describe Cuboid::RPC::Server::Agent do
                     it 'provides Instances from the least burdened Agent' do
                         d1 = agent_spawn(
                           address: '127.0.0.1',
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         3.times do
@@ -210,7 +211,8 @@ describe Cuboid::RPC::Server::Agent do
                         d2 = agent_spawn(
                           address:   '127.0.0.2',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         2.times do
@@ -220,7 +222,8 @@ describe Cuboid::RPC::Server::Agent do
                         d3 = agent_spawn(
                           address:   '127.0.0.3',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
                         d3.spawn( strategy: :direct )
                         preferred = d3.url.split( ':' ).first
@@ -238,7 +241,8 @@ describe Cuboid::RPC::Server::Agent do
                     it 'provides Instances from the most burdened Agent' do
                         d1 = agent_spawn(
                           address: '127.0.0.1',
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         3.times do
@@ -248,7 +252,8 @@ describe Cuboid::RPC::Server::Agent do
                         d2 = agent_spawn(
                           address:   '127.0.0.2',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         2.times do
@@ -258,7 +263,8 @@ describe Cuboid::RPC::Server::Agent do
                         d3 = agent_spawn(
                           address:   '127.0.0.3',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
                         d3.spawn( strategy: :direct )
 
@@ -271,7 +277,8 @@ describe Cuboid::RPC::Server::Agent do
                     it 'provides Instances from the least burdened Agent' do
                         d1 = agent_spawn(
                           address: '127.0.0.1',
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         3.times do
@@ -281,7 +288,8 @@ describe Cuboid::RPC::Server::Agent do
                         d2 = agent_spawn(
                           address:   '127.0.0.2',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
 
                         2.times do
@@ -291,7 +299,8 @@ describe Cuboid::RPC::Server::Agent do
                         d3 = agent_spawn(
                           address:   '127.0.0.3',
                           peer: d1.url,
-                          application: "#{fixtures_path}/mock_app.rb"
+                          application: "#{fixtures_path}/mock_app.rb",
+                          daemonize: true
                         )
                         d3.spawn( strategy: :direct )
                         preferred = d3.url.split( ':' ).first
@@ -307,7 +316,7 @@ describe Cuboid::RPC::Server::Agent do
 
                 context 'other' do
                     it 'returns :error_unknown_strategy' do
-                        expect(agent_spawn( peer: subject.url ).
+                        expect(agent_spawn( peer: subject.url, daemonize: true ).
                           spawn( strategy: 'blah' )).to eq('error_unknown_strategy')
                     end
                 end
@@ -317,7 +326,8 @@ describe Cuboid::RPC::Server::Agent do
                 it 'returns an Instance from the requested Agent' do
                     d1 = agent_spawn(
                         address: '127.0.0.1',
-                        application: "#{fixtures_path}/mock_app.rb"
+                        application: "#{fixtures_path}/mock_app.rb",
+                        daemonize: true
                     )
 
                     d1.spawn( strategy: :direct )
@@ -325,14 +335,16 @@ describe Cuboid::RPC::Server::Agent do
                     d2 = agent_spawn(
                         address:   '127.0.0.2',
                         peer: d1.url,
-                        application: "#{fixtures_path}/mock_app.rb"
+                        application: "#{fixtures_path}/mock_app.rb",
+                        daemonize: true
                     )
                     d2.spawn( strategy: :direct )
 
                     d3 = agent_spawn(
                         address:   '127.0.0.3',
                         peer: d1.url,
-                        application: "#{fixtures_path}/mock_app.rb"
+                        application: "#{fixtures_path}/mock_app.rb",
+                        daemonize: true
                     )
                     2.times do
                         d3.spawn( strategy: :direct )

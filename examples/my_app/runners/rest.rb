@@ -20,7 +20,7 @@ include Cuboid
 #           * if the Agent is part of a Grid it enjoys load-balancing.
 
 # Simple example, no Agent nor Queue.
-pid = MyApp.spawn( :rest )
+pid = MyApp.spawn( :rest, daemonize: true )
 # Wait for the server to boot-up.
 sleep 1 while request( :get ).code == 0
 

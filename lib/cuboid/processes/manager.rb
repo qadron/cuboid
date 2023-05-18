@@ -195,6 +195,7 @@ class Manager
         stdout     = options.delete(:stdout)
         stderr     = options.delete(:stderr)
         new_pgroup = options.delete(:new_pgroup)
+        daemonize  = options.delete(:daemonize)
 
         spawn_options = {}
 
@@ -225,6 +226,7 @@ class Manager
         encoded_options = Base64.strict_encode64( Marshal.dump( options ) )
         argv            = [executable, encoded_options]
 
+
         # It's very, **VERY** important that we use this argument format as
         # it bypasses the OS shell and we can thus count on a 1-to-1 process
         # creation and that the PID we get will be for the actual process.
@@ -238,6 +240,7 @@ class Manager
         )
 
         self << pid
+        Process.waitpid( pid ) if !daemonize
         pid
     end
 

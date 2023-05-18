@@ -6,7 +6,7 @@ describe Cuboid::RPC::Server::Agent::Node do
     def get_node( port = available_port )
         Cuboid::Options.rpc.server_port = port
 
-        Cuboid::Processes::Manager.spawn( :node )
+        Cuboid::Processes::Manager.spawn( :node, daemonize: true )
 
         c = Cuboid::RPC::Client::Base.new(
             "#{Cuboid::Options.rpc.server_address}:#{port}"

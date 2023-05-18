@@ -54,6 +54,7 @@ class Schedulers
     def spawn( options = {} )
         options = options.dup
         fork = options.delete(:fork)
+        daemonize = options.delete(:daemonize)
 
         options[:ssl] ||= {
           server: {},
@@ -81,7 +82,7 @@ class Schedulers
             }
         }
 
-        pid = Manager.spawn( :scheduler, options: options, fork: fork )
+        pid = Manager.spawn( :scheduler, options: options, fork: fork, daemonize: daemonize )
 
         url = "#{options[:rpc][:server_address]}:#{options[:rpc][:server_port]}"
         while sleep( 0.1 )

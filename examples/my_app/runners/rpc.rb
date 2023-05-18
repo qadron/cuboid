@@ -10,7 +10,7 @@ ap '=' * 80
 puts
 
 # Spawn a single instance just for us to play with; test it maybe or some such.
-myapp = MyApp.spawn( :instance )
+myapp = MyApp.spawn( :instance, daemonize: true )
 
 # Access to the custom RPC API.
 ap myapp.custom.foo
@@ -62,7 +62,7 @@ ap '=' * 80
 puts
 
 # Setup a Agent to provide Instances to us.
-agent = MyApp.spawn( :agent )
+agent = MyApp.spawn( :agent, daemonize: true )
 
 # This will call our custom aggregator service, no Instances yet though.
 ap agent.custom.foo
@@ -110,16 +110,16 @@ puts
 grid = []
 
 # 1st node.
-grid << MyApp.spawn( :agent )
+grid << MyApp.spawn( :agent, daemonize: true )
 
 # 2nd node.
 #
 # All that needs to be done is to pass one of the others as a peer and
 # they'll mesh it up themselves.
-grid << MyApp.spawn( :agent, peer: grid.sample.url )
+grid << MyApp.spawn( :agent, peer: grid.sample.url, daemonize: true )
 
 # 3rd node.
-grid << MyApp.spawn( :agent, peer: grid.sample.url )
+grid << MyApp.spawn( :agent, peer: grid.sample.url, daemonize: true )
 
 5.times do |i|
     # Pick Agents at random; not necessary but fun.
@@ -173,7 +173,7 @@ puts
 # there, and if the Agent is part of a Grid then we'll also enjoy load-balancing.
 #
 # Else, Instances are spawned on the same machine by the Scheduler itself.
-scheduler = MyApp.spawn( :scheduler )
+scheduler = MyApp.spawn( :scheduler, daemonize: true )
 
 # Push Instance options for some jobs.
 5.times do |i|
@@ -189,7 +189,7 @@ end
 
 # If one already has an Instance, management can be handed over to the Scheduler
 # at any time.
-myapp = MyApp.spawn( :instance )
+myapp = MyApp.spawn( :instance, daemonize: true )
 scheduler.attach myapp.url, myapp.token
 myapp.run( id: [1, 2, 3] )
 # :run

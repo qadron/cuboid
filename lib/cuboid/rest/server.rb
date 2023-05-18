@@ -133,13 +133,13 @@ class Server < Sinatra::Base
                 ctx.cert = options[:ssl_certificate]
 
                 if options[:ssl_ca]
-                    print_info 'CA provided, peer verification has been enabled.'
+                    puts 'CA provided, peer verification has been enabled.'
 
                     ctx.ca          = options[:ssl_ca]
                     ctx.verify_mode = Puma::MiniSSL::VERIFY_PEER |
                         Puma::MiniSSL::VERIFY_FAIL_IF_NO_PEER_CERT
                 else
-                    print_info 'CA missing, peer verification has been disabled.'
+                    puts 'CA missing, peer verification has been disabled.'
                 end
 
                 ssl = true
@@ -149,7 +149,7 @@ class Server < Sinatra::Base
                 server.add_tcp_listener( options[:bind], options[:port] )
             end
 
-            print_status "Listening on http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}"
+            puts "Listening on http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}"
 
             begin
                 server.run.join

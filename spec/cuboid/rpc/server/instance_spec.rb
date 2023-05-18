@@ -3,13 +3,14 @@ require 'spec_helper'
 require "#{fixtures_path}/mock_app"
 
 describe 'Cuboid::RPC::Server::Instance' do
-    let(:subject) { instance_spawn( application: "#{fixtures_path}/mock_app.rb" ) }
+    let(:subject) { instance_spawn( application: "#{fixtures_path}/mock_app.rb", daemonize: true ) }
 
     it 'supports UNIX sockets', if: Raktr.supports_unix_sockets? do
         socket = "#{Dir.tmpdir}/cuboid-instance-#{Cuboid::Utilities.generate_token}"
         subject = instance_spawn(
           socket:      socket,
-          application: "#{fixtures_path}/mock_app.rb"
+          application: "#{fixtures_path}/mock_app.rb",
+          daemonize: true
         )
 
         expect(subject.url).to eq(socket)
@@ -108,7 +109,7 @@ describe 'Cuboid::RPC::Server::Instance' do
             snapshot_path = subject.snapshot_path
             subject.shutdown
 
-            subject = instance_spawn
+            subject = instance_spawn( daemonize: true )
             subject.restore! snapshot_path
 
             sleep 1 while subject.status != :done
