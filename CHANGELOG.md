@@ -1,3 +1,8 @@
+# 0.2.2
+
+* `Processes::Manager`
+  * `#spawn` -- Handle `Interrupt` more gracefully.
+
 # 0.2.1
 
 * `Processes::Manager`
