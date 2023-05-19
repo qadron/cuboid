@@ -247,6 +247,8 @@ class Manager
             rescue Errno::ECHILD
                 @pids.delete pid
                 return
+            rescue Interrupt
+                exit 0
             end
         end
 
