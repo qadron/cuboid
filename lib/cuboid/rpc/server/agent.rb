@@ -50,7 +50,8 @@ class Agent
 
         prep_logging
 
-        print_status 'Starting the RPC Server...'
+        print_status 'Starting the Agent...'
+        @server.logger.info( 'System' ) { "Logfile at: #{@logfile}"  }
 
         @server.add_handler( 'agent', self )
 
@@ -339,7 +340,7 @@ class Agent
     def prep_logging
         # reroute all output to a logfile
         @logfile ||= reroute_to_file( @options.paths.logs +
-            "/Agent - #{Process.pid}-#{@options.rpc.server_port}.log" )
+            "Agent-#{Process.pid}-#{@options.rpc.server_port}.log" )
     end
 
     def connect_to_peer( url )

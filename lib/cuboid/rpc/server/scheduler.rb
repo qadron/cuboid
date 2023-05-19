@@ -389,7 +389,8 @@ class Scheduler
             end
         end
 
-        print_status 'Ready'
+        print_status 'Starting the Scheduler...'
+        @server.logger.info( 'System' ) { "Logfile at: #{@logfile}"  }
         @server.start
     rescue => e
         print_exception e
@@ -411,7 +412,7 @@ class Scheduler
     def prep_logging
         # reroute all output to a logfile
         @logfile ||= reroute_to_file(
-            @options.paths.logs + "/Scheduler - #{Process.pid}-#{@options.rpc.server_port}.log"
+            @options.paths.logs + "Scheduler-#{Process.pid}-#{@options.rpc.server_port}.log"
         )
     end
 

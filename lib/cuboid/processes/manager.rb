@@ -240,7 +240,16 @@ class Manager
         )
 
         self << pid
-        Process.waitpid( pid ) if !daemonize
+
+        if !daemonize
+            begin
+                Process.waitpid( pid )
+            rescue Errno::ECHILD
+                @pids.delete pid
+                return
+            end
+        end
+
         pid
     end
 

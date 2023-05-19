@@ -57,14 +57,12 @@ class Instance
         @options.datastore.token = token
 
         if @options.output.reroute_to_logfile
-            reroute_to_file "#{@options.paths.logs}/Instance - #{Process.pid}" <<
-                                "-#{@options.rpc.server_port}.log"
+            reroute_to_file "#{@options.paths.logs}Instance-#{Process.pid}-#{@options.rpc.server_port}.log"
         else
             reroute_to_file false
         end
 
-        set_error_logfile "#{@options.paths.logs}/Instance - #{Process.pid}" <<
-                              "-#{@options.rpc.server_port}.error.log"
+        set_error_logfile "#{@options.paths.logs}Instance-#{Process.pid}-#{@options.rpc.server_port}.error.log"
 
         set_handlers( @server )
 
@@ -309,7 +307,7 @@ class Instance
             end
         end
 
-        print_status 'Starting the server...'
+        print_status 'Starting the Instance...'
         @server.start
     end
 
