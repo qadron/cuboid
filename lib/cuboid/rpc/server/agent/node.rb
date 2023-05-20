@@ -38,26 +38,24 @@ class Server::Agent::Node
 
         reroute_to_file( logfile ) if logfile
 
-        print_status 'Initializing grid node...'
+        print_status 'Initializing node...'
 
         @dead_nodes = Set.new
-        @peers = Set.new
+        @peers      = Set.new
         @nodes_info_cache = []
 
         if (peer = @options.agent.peer)
             # Grab the peer's peers.
-            connect_to_peer( peer ).peers do |urls|
-                if urls.rpc_exception?
-                    add_dead_peer( peer )
-                    print_info "Neighbour seems dead: #{peer}"
+            connect_to_peer( peer ).peers do |peers|
+                if peers.rpc_exception?
+                    print_info "Peer seems dead: #{peer}"
                     add_dead_peer( peer )
                     next
                 end
 
-                # Add peer and announce it to everyone.
-                add_peer( peer, true )
-
-                urls.each { |url| @peers << url if url != @url }
+                peers << peer
+                peers.each { |url| add_peer url }
+                announce @url
             end
         end
 
@@ -92,24 +90,11 @@ class Server::Agent::Node
     #
     # @param    [String]    node_url
     #   URL of a peering node.
-    # @param    [Boolean]   propagate
-    #   Whether or not to announce the new node to the peers.
-    def add_peer( node_url, propagate = false )
-        # we don't want ourselves in the Set
-        return false if node_url == @url
-        return false if @peers.include?( node_url )
-
+    def add_peer( node_url )
         print_status "Adding peer: #{node_url}"
 
         @peers << node_url
         log_updated_peers
-        announce( node_url ) if propagate
-
-        connect_to_peer( node_url ).add_peer( @url, propagate ) do |res|
-            next if !res.rpc_exception?
-            add_dead_peer( node_url )
-            print_status "Neighbour seems dead: #{node_url}"
-        end
         true
     end
 
@@ -120,7 +105,7 @@ class Server::Agent::Node
     end
 
     # @return   [Array]
-    #   Neighbour/node/peer URLs.
+    #   Peer/node/peer URLs.
     def peers
         @peers.to_a
     end
@@ -136,7 +121,7 @@ class Server::Agent::Node
             each = proc do |peer, iter|
                 connect_to_peer( peer ).info do |info|
                     if info.rpc_exception?
-                        print_info "Neighbour seems dead: #{peer}"
+                        print_info "Peer seems dead: #{peer}"
                         add_dead_peer( peer )
                         log_updated_peers
 
@@ -165,8 +150,8 @@ class Server::Agent::Node
     #   * `peers` -- Array of peers.
     def info
         {
-            'url'                    => @url,
-            'name'                   => @options.agent.name,
+            'url'               => @url,
+            'name'              => @options.agent.name,
             'peers'             => @peers.to_a,
             'unreachable_peers' => @dead_nodes.to_a
         }
@@ -209,7 +194,7 @@ class Server::Agent::Node
             peer.alive? do |res|
                 next if res.rpc_exception?
 
-                print_status "Agent came back to life: #{url}"
+                print_status "Peer came back to life: #{url}"
                 ([@url] | peers).each do |node|
                     peer.add_peer( node ){}
                 end
@@ -225,12 +210,10 @@ class Server::Agent::Node
     # @param    [String]    node
     #   URL
     def announce( node )
-        print_status "Advertising: #{node}"
+        print_status "Announcing: #{node}"
 
         peers.each do |peer|
-            next if peer == node
-
-            print_info '---- to: ' + peer
+            print_info "---- to: #{peer}"
             connect_to_peer( peer ).add_peer( node ) do |res|
                 add_dead_peer( peer ) if res.rpc_exception?
             end

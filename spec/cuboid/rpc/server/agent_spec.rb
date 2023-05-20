@@ -226,13 +226,13 @@ describe Cuboid::RPC::Server::Agent do
                           daemonize: true
                         )
                         d3.spawn( strategy: :direct )
-                        preferred = d3.url.split( ':' ).first
 
+                        preferred = d3.url.split( ':' ).first
                         expect(d3.spawn(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
                         expect(%W{127.0.0.3 127.0.0.2}).to include d1.spawn['url'].split( ':' ).first
                         expect(d2.spawn(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.1 127.0.0.2}).to include d3.spawn(strategy: :horizontal )['url'].split( ':' ).first
                         expect(%W{127.0.0.1 127.0.0.3}).to include d3.spawn(strategy: :horizontal )['url'].split( ':' ).first
-                        expect(%W{127.0.0.2 127.0.0.3}).to include d3.spawn(strategy: :horizontal )['url'].split( ':' ).first
                         expect(%W{127.0.0.2 127.0.0.3}).to include d1.spawn(strategy: :horizontal )['url'].split( ':' ).first
                     end
                 end
@@ -303,14 +303,14 @@ describe Cuboid::RPC::Server::Agent do
                           daemonize: true
                         )
                         d3.spawn( strategy: :direct )
-                        preferred = d3.url.split( ':' ).first
 
-                        expect(d3.spawn['url'].split( ':' ).first).to eq(preferred)
+                        preferred = d3.url.split( ':' ).first
+                        expect(d3.spawn(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
                         expect(%W{127.0.0.3 127.0.0.2}).to include d1.spawn['url'].split( ':' ).first
-                        expect(d2.spawn['url'].split( ':' ).first).to eq(preferred)
-                        expect(%W{127.0.0.1 127.0.0.3}).to include d3.spawn['url'].split( ':' ).first
-                        expect(%W{127.0.0.2 127.0.0.3}).to include d3.spawn['url'].split( ':' ).first
-                        expect(%W{127.0.0.2 127.0.0.3}).to include d1.spawn['url'].split( ':' ).first
+                        expect(d2.spawn(strategy: :horizontal )['url'].split( ':' ).first).to eq(preferred)
+                        expect(%W{127.0.0.1 127.0.0.2}).to include d3.spawn(strategy: :horizontal )['url'].split( ':' ).first
+                        expect(%W{127.0.0.1 127.0.0.3}).to include d3.spawn(strategy: :horizontal )['url'].split( ':' ).first
+                        expect(%W{127.0.0.2 127.0.0.3}).to include d1.spawn(strategy: :horizontal )['url'].split( ':' ).first
                     end
                 end
 

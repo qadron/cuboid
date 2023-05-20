@@ -1,3 +1,7 @@
+# 0.2.3
+
+* Simplified convergence of P2P mesh network.
+
 # 0.2.2
 
 * `Processes::Manager`

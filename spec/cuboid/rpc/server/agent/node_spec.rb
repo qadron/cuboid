@@ -24,7 +24,7 @@ describe Cuboid::RPC::Server::Agent::Node do
     end
 
     before( :each ) do
-        options.paths.executables        = "#{fixtures_path}executables/"
+        options.paths.executables   = "#{fixtures_path}executables/"
         options.agent.ping_interval = 0.5
     end
     after( :each )  do
@@ -65,7 +65,6 @@ describe Cuboid::RPC::Server::Agent::Node do
 
             sleep 0.5
             expect(subject.peers).to eq([c.url])
-            expect(c.peers).to eq([subject.url])
         end
     end
 
@@ -76,7 +75,6 @@ describe Cuboid::RPC::Server::Agent::Node do
             subject.add_peer( c.url )
             sleep 0.5
 
-            expect(c.peers).to eq([subject.url])
             expect(subject.peers).to eq([c.url])
 
             subject.shutdown rescue break while sleep 0.1
@@ -117,7 +115,6 @@ describe Cuboid::RPC::Server::Agent::Node do
 
             subject.add_peer( c.url )
             sleep 0.5
-            expect(c.peers).to eq([subject.url])
 
             c.unplug
 
@@ -136,35 +133,6 @@ describe Cuboid::RPC::Server::Agent::Node do
 
         it 'adds a peer' do
             expect(subject.peers).to eq([other.url])
-            expect(other.peers).to eq([subject.url])
-        end
-
-        context 'when propagate is set to true' do
-            it 'announces the new peer to the existing peers' do
-                n = get_node
-                subject.add_peer( n.url, true )
-                sleep 0.5
-
-                expect(subject.peers.sort).to eq([other.url, n.url].sort)
-                expect(other.peers.sort).to eq([subject.url, n.url].sort)
-
-                c = get_node
-                n.add_peer( c.url, true )
-                sleep 0.5
-
-                expect(subject.peers.sort).to eq([other.url, n.url, c.url].sort)
-                expect(other.peers.sort).to eq([subject.url, n.url, c.url].sort)
-                expect(c.peers.sort).to eq([subject.url, n.url, other.url].sort)
-
-                d = get_node
-                d.add_peer( c.url, true )
-                sleep 0.5
-
-                expect(subject.peers.sort).to eq([d.url, other.url, n.url, c.url].sort)
-                expect(other.peers.sort).to eq([d.url, subject.url, n.url, c.url].sort)
-                expect(c.peers.sort).to eq([d.url, subject.url, n.url, other.url].sort)
-                expect(d.peers.sort).to eq([c.url, subject.url, n.url, other.url].sort)
-            end
         end
     end
 
