@@ -1,3 +1,7 @@
+# 0.2.4
+
+* Made `Server::Instance` services accessible from `Application`.
+
 # 0.2.3
 
 * Simplified convergence of P2P mesh network.
