@@ -260,6 +260,10 @@ sleep 0.1 while sleepers.map(&:busy?).include?( true )
 
 _You can replace `host1` with `localhost` and run all examples on the same machine._
 
+## Users
+
+* [QMap](https://github.com/qadron/qmap) --  A distributed network mapper/security scanner.
+
 ## License
 
 Please see the _LICENSE.md_ file.
