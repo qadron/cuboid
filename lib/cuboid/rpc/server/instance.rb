@@ -332,7 +332,12 @@ class Instance
         server.add_handler( 'options',  @active_options )
 
         Cuboid::Application.application.instance_services.each do |name, service|
-            server.add_handler( name.to_s, service.new )
+            si = service.new
+
+            Cuboid::Application.application.send :attr_reader, name
+            @application.application.instance_variable_set( "@#{name}".to_sym, si )
+
+            server.add_handler( name.to_s, si )
         end
     end
 
