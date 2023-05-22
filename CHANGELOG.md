@@ -1,3 +1,7 @@
+# 0.2.4.1
+
+* `Application`: Added `#application=` to help with inheritance.
+
 # 0.2.4
 
 * Made `Server::Instance` services accessible from `Application`.
