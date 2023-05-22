@@ -263,7 +263,7 @@ _You can replace `host1` with `localhost` and run all examples on the same machi
 ## Users
 
 * [QMap](https://github.com/qadron/qmap) --  A distributed network mapper/security scanner.
-* [Velo](https://github.com/peplum/velo) --  A cluster/supercomputer builder.
+* [Peplum](https://github.com/peplum/peplum) --  A cluster/supercomputer builder.
 
 ## License
 
