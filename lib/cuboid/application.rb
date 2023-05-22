@@ -214,11 +214,15 @@ class Application
             super
 
             application.prepend PrependMethods
-            @application = application
+            self.application = application
         end
 
         def application
-            @application ||= nil
+            @application
+        end
+
+        def application=( app )
+            @application = app
         end
 
         def method_missing( sym, *args, &block )
