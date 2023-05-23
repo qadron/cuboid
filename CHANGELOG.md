@@ -1,3 +1,7 @@
+# 0.2.4.2
+
+* Instance RPC services now decorated with `Server::Services::Base`.
+
 # 0.2.4.1
 
 * `Application`: Added `#application=` to help with inheritance.

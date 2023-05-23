@@ -12,6 +12,8 @@ require lib + 'rpc/server/active_options'
 require lib + 'rpc/server/output'
 require lib + 'rpc/server/application_wrapper'
 
+require lib + 'rpc/server/services/base'
+
 module RPC
 class Server
 
@@ -297,7 +299,7 @@ class Instance
         end
     end
 
-    # Starts  RPC service.
+    # Starts  RPC services.
     def _run
         Raktr.global.on_error do |_, e|
             print_error "Reactor: #{e}"
@@ -332,7 +334,8 @@ class Instance
         server.add_handler( 'options',  @active_options )
 
         Cuboid::Application.application.instance_services.each do |name, service|
-            si = service.new
+            service.include Server::Services::Base
+            si = service.new( name, self )
 
             Cuboid::Application.application.send :attr_reader, name
             @application.application.instance_variable_set( "@#{name}".to_sym, si )
