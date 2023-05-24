@@ -8,7 +8,7 @@ distributed applications in Ruby.
 In hipper terms, you can very easily setup your own specialized _Cloud_ or
 _Cloud_ within a _Cloud_.
 
-In older-fashioned terms you can build load-balanced, on-demand, clustered application and even super-computers -- 
+In older-fashioned terms you can build load-balanced, on-demand, clustered applications and even super-computers -- 
 see [Peplum](https://github.com/peplum/).
 
 It offers:
