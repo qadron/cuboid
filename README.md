@@ -1,4 +1,4 @@
-# Cuboid Framework -- a decentralized distributed framework in Ruby.
+# Cuboid Framework -- a decentralized & distributed computing framework in Ruby.
 
 ## Summary
 
@@ -7,6 +7,9 @@ distributed applications in Ruby.
 
 In hipper terms, you can very easily setup your own specialized _Cloud_ or
 _Cloud_ within a _Cloud_.
+
+In older-fashioned terms you can build load-balanced, on-demand, clustered application and even super-computers -- 
+see [Peplum](https://github.com/peplum/).
 
 It offers:
 
@@ -262,8 +265,9 @@ _You can replace `host1` with `localhost` and run all examples on the same machi
 
 ## Users
 
-* [QMap](https://github.com/qadron/qmap) --  A distributed network mapper/security scanner.
-* [Peplum](https://github.com/peplum/peplum) --  A cluster/supercomputer builder.
+* [QMap](https://github.com/qadron/qmap) --  A distributed network mapper/security scanner powered by [nmap](http://nmap.org/).
+* [Peplum](https://github.com/peplum/peplum) -- A distributed parallel processing solution -- allows you to build Beowulf
+(or otherwise) clusters and even super-computers.
 
 ## License
 
