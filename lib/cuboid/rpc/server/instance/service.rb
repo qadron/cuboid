@@ -1,9 +1,8 @@
 module Cuboid
 module RPC
 class Server
-module Services
-
-module Base
+class Instance
+module Service
 
   attr_reader :name
   attr_reader :instance
@@ -18,5 +17,4 @@ end
 end
 end
 end
-
 end

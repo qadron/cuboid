@@ -12,7 +12,8 @@ require lib + 'rpc/server/active_options'
 require lib + 'rpc/server/output'
 require lib + 'rpc/server/application_wrapper'
 
-require lib + 'rpc/server/services/base'
+require lib + 'rpc/server/instance/service'
+require lib + 'rpc/server/instance/peers'
 
 module RPC
 class Server
@@ -334,7 +335,7 @@ class Instance
         server.add_handler( 'options',  @active_options )
 
         Cuboid::Application.application.instance_services.each do |name, service|
-            service.include Server::Services::Base
+            service.include Server::Instance::Service
             si = service.new( name, self )
 
             Cuboid::Application.application.send :attr_reader, name
