@@ -1,3 +1,8 @@
+# 0.2.5
+
+* `RPC::Server::Services::Base` => `RPC::Server::Instance::Service`
+* Added `RPC::Server::Instance::Peers` as a helper to iterate over peer `Instances`.
+
 # 0.2.4.2
 
 * Instance RPC services now decorated with `Server::Services::Base`.
