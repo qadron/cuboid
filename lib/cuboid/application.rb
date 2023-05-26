@@ -153,7 +153,9 @@ class Application
 
         def serializer
             @serializer ||= nil
-            @serializer || RPC::Serializer
+
+            # Default to JSON for REST API compatibility.
+            @serializer || JSON
         end
 
         def validate_options_with( handler )

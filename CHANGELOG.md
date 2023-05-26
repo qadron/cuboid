@@ -1,3 +1,7 @@
+# 0.2.6
+
+* `Application.serializer` now defaults to JSON for REST API compatibility.
+
 # 0.2.5
 
 * `RPC::Server::Services::Base` => `RPC::Server::Instance::Service`
