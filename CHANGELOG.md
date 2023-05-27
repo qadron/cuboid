@@ -1,3 +1,7 @@
+# 0.2.7
+
+* `RPC::Server::Agent::Node#unplug` -- Use Raktr iterator.
+
 # 0.2.6
 
 * `Application.serializer` now defaults to JSON for REST API compatibility.

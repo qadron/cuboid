@@ -76,8 +76,8 @@ class Server::Agent::Node
     end
 
     def unplug
-        @peers.each do |peer|
-            connect_to_peer( peer ).remove_peer( @url ) {}
+        Raktr.global.create_iterator( @peers, 20 ).each do |peer, iterator|
+            connect_to_peer( peer ).remove_peer( @url ) { iterator.next }
         end
 
         @peers.clear
