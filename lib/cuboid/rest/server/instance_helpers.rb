@@ -88,7 +88,7 @@ module InstanceHelpers
         end
     end
 
-    def exists?( id )
+    def exist?( id )
         instances.include? id
     end
 

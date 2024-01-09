@@ -41,7 +41,7 @@ class Base
         end
 
         def disk_space_for( pid )
-            return 0 if !Dir.exists?( Options.paths.tmp_dir_for( pid ) )
+            return 0 if !Dir.exist?( Options.paths.tmp_dir_for( pid ) )
 
             IO.read( disk_space_file_for( pid ) ).to_i
         end

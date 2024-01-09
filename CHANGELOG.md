@@ -1,3 +1,8 @@
+# 0.2.8
+
+* `File.exists?` => `File.exist?`
+* `Dir.exists?` => `Dir.exist?`
+
 # 0.2.7
 
 * `RPC::Server::Agent::Node#unplug` -- Use Raktr iterator.
