@@ -122,8 +122,6 @@ class Server < Sinatra::Base
             set :password, options[:password]
 
             server = Puma::Server.new( self )
-            server.min_threads = 0
-            server.max_threads = 16
 
             ssl = false
             if options[:ssl_key] && options[:ssl_certificate]
