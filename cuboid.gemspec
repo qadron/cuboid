@@ -53,7 +53,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'sinatra-contrib',     '2.2.0'
 
     # RPC client/server implementation.
-    s.add_dependency 'toq',                 '~> 0.0.1'
+    s.add_dependency 'toq',                 '~> 0.1.0'
 
     s.add_dependency 'vmstat',              '~> 2.3.0'
     s.add_dependency 'sys-proctable',       '~> 1.3.0'
