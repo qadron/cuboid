@@ -140,6 +140,7 @@ class Application
     def aborted
         @abort = false
         @status = :aborted
+        @running = false
         nil
     end
 

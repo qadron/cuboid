@@ -103,8 +103,15 @@ class Instance
     # @see #suspend
     # @see #snapshot_path
     def restore!( snapshot )
+        # If the instance isn't clean bail out now.
+        return false if busy? || @called
+
+        @called = @run_initializing = true
+
         Thread.new do
-            @application.restore!( snapshot ).run
+            @application.restore!( snapshot )
+            @application.run
+            @run_initializing = false
         end
 
         true

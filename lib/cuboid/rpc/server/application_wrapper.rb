@@ -44,7 +44,7 @@ class ApplicationWrapper
     #   `true` If the system is scanning, `false` if {#run} hasn't been called
     #   yet or if the scan has finished.
     def busy?
-        ![:ready, :done, :suspended].include?( @application.status ) &&
+        ![:ready, :done, :suspended, :aborted].include?( @application.status ) &&
           !!@extended_running
     end
 
@@ -58,6 +58,7 @@ class ApplicationWrapper
         # Start the scan  -- we can't block the RPC server so we're using a Thread.
         Thread.new do
             @application.run
+            @extended_running = false
         end
 
         true
@@ -66,10 +67,10 @@ class ApplicationWrapper
     def clean_up
         return false if @rpc_cleaned_up
 
+        @application.clean_up
+
         @rpc_cleaned_up   = true
         @extended_running = false
-
-        @application.clean_up
     end
 
     # @param    [Integer]   starting_line
@@ -109,7 +110,7 @@ class ApplicationWrapper
 
         data = {
             status:         status,
-            busy:           running?,
+            busy:           @extended_running,
             application:    @application.class.to_s,
             seed:           Utilities.random_seed,
             agent_url: Cuboid::Options.agent.url,
