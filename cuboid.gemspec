@@ -49,8 +49,8 @@ Gem::Specification.new do |s|
     s.add_dependency 'rack-test'
 
     # REST API
-    s.add_dependency 'sinatra',             '2.2.0'
-    s.add_dependency 'sinatra-contrib',     '2.2.0'
+    s.add_dependency 'sinatra',             '2.2.3'
+    s.add_dependency 'sinatra-contrib',     '2.2.3'
 
     # RPC client/server implementation.
     s.add_dependency 'toq',                 '~> 0.1.0'
