@@ -45,7 +45,7 @@ Gem::Specification.new do |s|
     # Web server
     s.add_dependency 'puma',                '~> 6.4.2'
 
-    s.add_dependency 'rack',                '2.2.3.1'
+    s.add_dependency 'rack',                '2.2.9'
     s.add_dependency 'rack-test'
 
     # REST API
