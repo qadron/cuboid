@@ -31,19 +31,19 @@ Gem::Specification.new do |s|
     # latest one.
     s.add_dependency 'bundler'
 
-    s.add_dependency 'concurrent-ruby',     '~> 1.2.3'
-    s.add_dependency 'concurrent-ruby-ext', '~> 1.2.3'
+    s.add_dependency 'concurrent-ruby',     '~> 1.3.4'
+    s.add_dependency 'concurrent-ruby-ext', '~> 1.3.4'
 
     # For compressing/decompressing system state archives.
-    s.add_dependency 'rubyzip',             '~> 2.3.2'
+    s.add_dependency 'rubyzip',             '~> 2.4.1'
 
-    s.add_dependency 'childprocess',        '~> 5.0.0'
+    s.add_dependency 'childprocess',        '~> 5.1.0'
 
     # RPC serialization.
-    s.add_dependency 'msgpack',             '~> 1.7.2'
+    s.add_dependency 'msgpack',             '~> 1.7.5'
 
     # Web server
-    s.add_dependency 'puma',                '~> 6.4.2'
+    s.add_dependency 'puma',                '~> 6.5.0'
 
     s.add_dependency 'rack',                '2.2.9'
     s.add_dependency 'rack-test'
@@ -55,7 +55,7 @@ Gem::Specification.new do |s|
     # RPC client/server implementation.
     s.add_dependency 'toq',                 '~> 0.1.0'
 
-    s.add_dependency 'vmstat',              '~> 2.3.0'
+    s.add_dependency 'vmstat',              '~> 2.3.1'
     s.add_dependency 'sys-proctable',       '~> 1.3.0'
 
     s.description = <<DESCRIPTION
