@@ -31,6 +31,9 @@ class Base < Toq::Server
             serializer: Serializer,
             token:      token
         ))
+
+        return if @reactor.running?
+        @reactor.run_in_thread
     end
 
     def address

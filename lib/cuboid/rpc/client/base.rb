@@ -42,6 +42,9 @@ class Base < Toq::Client
             socket:     socket,
             token:      token
         ))
+
+        return if @reactor.running?
+        @reactor.run_in_thread
     end
 
     def address

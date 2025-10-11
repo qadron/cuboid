@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
 
     s.rdoc_options      = [ '--charset=UTF-8' ]
 
-    s.add_dependency 'awesome_print',       '1.6.1'
+    s.add_dependency 'awesome_print',       '1.9.2'
 
     # Don't specify version, messes with the packages since they always grab the
     # latest one.
@@ -54,6 +54,7 @@ Gem::Specification.new do |s|
 
     # RPC client/server implementation.
     s.add_dependency 'toq',                 '~> 0.1.0'
+    s.add_dependency 'tiq',                 '~> 0.1.0'
 
     s.add_dependency 'vmstat',              '~> 2.3.1'
     s.add_dependency 'sys-proctable',       '~> 1.3.0'
