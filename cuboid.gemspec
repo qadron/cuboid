@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
     s.homepage          = 'https://github.com/qadron/cuboid'
     s.email             = 'tasos.laskos@gmail.com'
     s.authors           = [ 'Tasos Laskos' ]
-    s.licenses          = ['MIT']
+    s.licenses          = ['MPL v2.0']
 
     s.files            += Dir.glob( 'config/**/**' )
     s.files            += Dir.glob( 'lib/**/**' )
