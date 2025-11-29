@@ -30,7 +30,7 @@ class System
 
     # @return   [Bool]
     def max_utilization?
-        utilization == 1
+        utilization >= 1
     end
 
     # @return   [Integer]

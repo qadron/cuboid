@@ -100,12 +100,12 @@ class Agent
         end
 
         if strategy == :direct || !@node.grid_member?
-            block.call( self.utilization == 1 ? nil : @url )
+            block.call( self.utilization >= 1.to_f ? nil : @url )
             return
         end
 
         pick_utilization = proc do |url, utilization|
-            (utilization == 1 || utilization.rpc_exception?) ?
+            (utilization >= 1.to_f || utilization.rpc_exception?) ?
                 nil : [url, utilization]
         end
 
