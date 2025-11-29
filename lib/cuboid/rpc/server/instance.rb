@@ -75,7 +75,8 @@ class Instance
             trap( signal ){ shutdown if !@options.datastore.do_not_trap }
         end
 
-        Raktr.global.run do
+        @raktr = Raktr.new
+        @raktr.run do
             _run
         end
     end
@@ -309,7 +310,7 @@ class Instance
 
     # Starts  RPC services.
     def _run
-        Raktr.global.on_error do |_, e|
+        @raktr.on_error do |_, e|
             print_error "Reactor: #{e}"
 
             e.backtrace.each do |l|

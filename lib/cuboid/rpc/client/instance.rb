@@ -23,11 +23,14 @@ class Instance
                 connection_pool_size: 1
             )
 
+            raktr = Raktr.new
+            raktr.run_in_thread
+
             client = new( url, token, options )
-            Raktr.global.delay( 0.1 ) do |task|
+            raktr.delay( 0.1 ) do |task|
                 client.alive? do |r|
                     if r.rpc_exception?
-                        Raktr.global.delay( 0.1, &task )
+                        raktr.delay( 0.1, &task )
                         next
                     end
 
