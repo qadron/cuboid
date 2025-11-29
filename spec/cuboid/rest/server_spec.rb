@@ -251,26 +251,6 @@ describe Cuboid::Rest::Server do
         end
     end
 
-    describe 'POST /instances/restore' do
-        let(:tpl_url) { '/instances/restore' }
-
-        it 'creates an instance from a restores session'
-
-        context 'when given invalid options' do
-            it 'returns a 500'
-
-            it 'does not list the instance on the index'
-        end
-
-        context 'when the system is at max utilization' do
-            it 'returns a 503'
-        end
-
-        context 'when a Agent has been set' do
-            it 'uses it'
-        end
-    end
-
     describe 'GET /instances/:instance' do
         let(:tpl_url) { '/instances/%s' }
 
@@ -587,59 +567,7 @@ describe Cuboid::Rest::Server do
             end
         end
     end
-
-    describe 'PUT /instances/:instance/abort' do
-        let(:tpl_url) { '/instances/%s/abort' }
-
-        before do
-            @id = create_instance
-        end
-
-        it 'aborts the instance' do
-            put url
-            expect(response_code).to eq 200
-
-            get "/instances/#{id}"
-            expect(['aborting', 'aborted']).to include response_data['status']
-        end
-
-        context 'when passed a non-existent id' do
-            let(:id) { non_existent_id }
-
-            it 'returns 404' do
-                put url
-                expect(response_code).to eq 404
-            end
-        end
-
-        context 'when the instance is from the Scheduler' do
-            before do
-                put '/scheduler/url', scheduler.url
-            end
-
-            it 'includes it' do
-                @id = scheduler.push( options )
-                sleep 0.1 while scheduler.running.empty?
-
-                put url
-                expect(response_code).to eq 200
-
-                get "/instances/#{id}"
-                expect(['aborting', 'aborted']).to include response_data['status']
-            end
-
-            context 'when the instance completes' do
-                it 'is removed' do
-                    @id = scheduler.push( options )
-                    sleep 0.1 while scheduler.completed.empty?
-
-                    put url
-                    expect(response_code).to be 404
-                end
-            end
-        end
-    end
-
+    
     describe 'DELETE /instances/:instance' do
         let(:tpl_url) { '/instances/%s' }
 
@@ -1031,7 +959,7 @@ describe Cuboid::Rest::Server do
 
                 get url
                 expect(response_data.size).to be 1
-                expect(File.exist? response_data[@id]).to be true
+                expect(File.exists? response_data[@id]).to be true
             end
         end
 

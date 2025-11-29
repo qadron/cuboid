@@ -76,7 +76,7 @@ class Server < Sinatra::Base
 
             id = params[:instance]
 
-            return if exist? id
+            return if exists? id
 
             halt 404, json( "Scan not found for id: #{h id}." )
         end

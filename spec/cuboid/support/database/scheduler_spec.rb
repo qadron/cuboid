@@ -132,7 +132,7 @@ describe Cuboid::Support::Database::Queue do
 
             expect(subject.disk.size).to eq(2)
             subject.disk.each do |path|
-                expect(File.exist?( path )).to be_truthy
+                expect(File.exists?( path )).to be_truthy
             end
         end
     end

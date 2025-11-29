@@ -49,7 +49,7 @@ describe 'Cuboid::RPC::Server::Instance' do
                 sleep 1 while !subject.suspended?
             end
 
-            expect(File.exist?( subject.snapshot_path )).to be_truthy
+            expect(File.exists?( subject.snapshot_path )).to be_truthy
         end
     end
 

@@ -20,8 +20,4 @@ group :prof do
     gem 'memory_profiler'
 end
 
-if File.exist? '../toq'
-    gem 'toq', path: '../toq'
-end
-
 gemspec

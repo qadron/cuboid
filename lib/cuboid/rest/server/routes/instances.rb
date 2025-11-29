@@ -32,23 +32,6 @@ module Instances
             json id: instance.token
         end
 
-        app.post '/instances/restore' do
-            max_utilization! if !agent && System.max_utilization?
-
-            options = ::JSON.load( request.body.read ) || {}
-
-            instance = get_instance
-            max_utilization! if !instance
-
-            handle_error proc { instance.shutdown } do
-                instance.restore!( options['session'] )
-            end
-
-            instances[instance.token] = instance
-
-            json id: instance.token
-        end
-
         # Progress
         app.get '/instances/:instance' do
             ensure_instance!
@@ -120,14 +103,6 @@ module Instances
 
             instance_for( params[:instance] ) do |instance|
                 json instance.resume!
-            end
-        end
-
-        app.put '/instances/:instance/abort' do
-            ensure_instance!
-
-            instance_for( params[:instance] ) do |instance|
-                json instance.abort!
             end
         end
 
