@@ -959,7 +959,7 @@ describe Cuboid::Rest::Server do
 
                 get url
                 expect(response_data.size).to be 1
-                expect(File.exists? response_data[@id]).to be true
+                expect(File.exist? response_data[@id]).to be true
             end
         end
 
