@@ -20,7 +20,7 @@ group :prof do
     gem 'memory_profiler'
 end
 
-gem 'raktr', path: '../raktr'
-gem 'toq', path: '../toq'
+# gem 'raktr', path: '../raktr'
+# gem 'toq', path: '../toq'
 
 gemspec
