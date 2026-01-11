@@ -46,7 +46,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'base64'
 
     # DO NOT TOUCH THIS GROUP VERSION
-    s.add_dependency 'rack',                '2.2.19'
+    s.add_dependency 'rack',                '2.2.20'
     s.add_dependency 'rack-test'
     # REST API
     s.add_dependency 'sinatra',             '3.2.0'
