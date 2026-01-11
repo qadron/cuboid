@@ -41,12 +41,12 @@ Gem::Specification.new do |s|
     s.add_dependency 'msgpack',             '~> 1.7.5'
 
     # Web server
-    s.add_dependency 'puma',                '~> 5.6.2'
+    s.add_dependency 'puma',                '~> 5.6.9'
 
     s.add_dependency 'base64'
 
     # DO NOT TOUCH THIS GROUP VERSION
-    s.add_dependency 'rack',                '2.2.4'
+    s.add_dependency 'rack',                '2.2.19'
     s.add_dependency 'rack-test'
     # REST API
     s.add_dependency 'sinatra',             '3.2.0'
