@@ -1,0 +1,68 @@
+current directory: /home/runner/work/cuboid/cuboid/vendor/bundle/ruby/3.2.0/gems/vmstat-2.3.1/ext/vmstat
+/usr/bin/ruby3.2 -I/usr/lib/ruby/vendor_ruby extconf.rb
+checking for unistd.h... yes
+checking for getpagesize() in unistd.h... yes
+checking for stdlib.h... yes
+checking for sys/loadavg.h... no
+checking for getloadavg()... yes
+checking for mach/mach.h... no
+checking for mach/mach_host.h... no
+checking for host_processor_info()... no
+checking for mach_host_self()... no
+checking for mach_task_self()... no
+checking for vm_deallocate()... no
+checking for mach_error_string()... no
+checking for task_info()... no
+checking for KERN_SUCCESS in mach/mach.h,mach/mach_host.h... no
+checking for TASK_BASIC_INFO in mach/mach.h,mach/mach_host.h... no
+checking for HOST_VM_INFO in mach/mach.h,mach/mach_host.h... no
+checking for CPU_STATE_MAX in mach/mach.h,mach/mach_host.h... no
+checking for PROCESSOR_CPU_LOAD_INFO in mach/mach.h,mach/mach_host.h... no
+checking for CPU_STATE_USER in mach/mach.h,mach/mach_host.h... no
+checking for CPU_STATE_SYSTEM in mach/mach.h,mach/mach_host.h... no
+checking for CPU_STATE_NICE in mach/mach.h,mach/mach_host.h... no
+checking for CPU_STATE_IDLE in mach/mach.h,mach/mach_host.h... no
+checking for sys/param.h... yes
+checking for sys/mount.h... yes
+checking for sys/statfs.h... yes
+checking for statfs()... yes
+checking for struct statfs.f_type in sys/param.h,sys/mount.h,sys/statfs.h... yes
+checking for struct statfs.f_fstypename in sys/param.h,sys/mount.h... no
+checking for statvfs() in sys/types.h,sys/statvfs.h... yes
+checking for struct statvfs.f_basetype in sys/types.h,sys/statvfs.h... no
+checking for unistd.h... yes
+checking for sys/sysctl.h... no
+checking for sys/types.h... yes
+checking for sys/socket.h... yes
+checking for net/if.h... yes
+checking for net/if_types.h... no
+checking for net/if_mib.h... no
+-> net/if_mib.h can't be checked individually, apply workaround for macOS mojave
+checking for net/if_mib.h... no
+checking for getloadavg()... yes
+checking for sysctl()... no
+checking for struct ifmibdata in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for CTL_NET in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for PF_LINK in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for NETLINK_GENERIC in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for IFMIB_IFDATA in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for IFDATA_GENERAL in unistd.h,sys/sysctl.h,sys/types.h,sys/socket.h,net/if.h,net/if_types.h,net/if_mib.h... no
+checking for CTL_KERN in sys/sysctl.h,sys/types.h... no
+checking for KERN_BOOTTIME in sys/sysctl.h,sys/types.h... no
+creating extconf.h
+creating Makefile
+
+current directory: /home/runner/work/cuboid/cuboid/vendor/bundle/ruby/3.2.0/gems/vmstat-2.3.1/ext/vmstat
+make DESTDIR\= sitearchdir\=./.gem.20260112-3384-r519ac sitelibdir\=./.gem.20260112-3384-r519ac clean
+
+current directory: /home/runner/work/cuboid/cuboid/vendor/bundle/ruby/3.2.0/gems/vmstat-2.3.1/ext/vmstat
+make DESTDIR\= sitearchdir\=./.gem.20260112-3384-r519ac sitelibdir\=./.gem.20260112-3384-r519ac
+compiling vmstat.c
+linking shared-object vmstat/vmstat.so
+
+current directory: /home/runner/work/cuboid/cuboid/vendor/bundle/ruby/3.2.0/gems/vmstat-2.3.1/ext/vmstat
+make DESTDIR\= sitearchdir\=./.gem.20260112-3384-r519ac sitelibdir\=./.gem.20260112-3384-r519ac install
+/usr/bin/install -c -m 0755 vmstat.so ./.gem.20260112-3384-r519ac/vmstat
+
+current directory: /home/runner/work/cuboid/cuboid/vendor/bundle/ruby/3.2.0/gems/vmstat-2.3.1/ext/vmstat
+make DESTDIR\= sitearchdir\=./.gem.20260112-3384-r519ac sitelibdir\=./.gem.20260112-3384-r519ac clean

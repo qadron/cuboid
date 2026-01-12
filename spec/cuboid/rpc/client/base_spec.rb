@@ -41,32 +41,34 @@ describe Cuboid::RPC::Client::Base do
     end
 
     let(:server_ssl_options) do
-        options[:tls] = {
-          ca:          support_path + 'pems/cacert.pem',
-          public_key:  support_path + 'pems/server/pub.pem',
-          private_key: support_path + 'pems/server/key.pem',
-          certificate: support_path + 'pems/server/cert.pem'
-        }
-        options
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/cacert.pem',
+                public_key:  support_path + 'pems/server/pub.pem',
+                private_key: support_path + 'pems/server/key.pem',
+                certificate: support_path + 'pems/server/cert.pem'
+            }
+        )
     end
 
     let(:client_ssl_options) do
-        options[:tls] = {
-          ca:          support_path + 'pems/cacert.pem',
-          private_key: support_path + 'pems/client/key.pem',
-          certificate: support_path + 'pems/client/cert.pem'
-        }
-        options
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/cacert.pem',
+                private_key: support_path + 'pems/client/key.pem',
+                certificate: support_path + 'pems/client/cert.pem'
+            }
+        )
     end
 
     let(:invalid_client_ssl_options) do
-        options[:tls] = {
-          ca:          support_path + 'pems/cacert.pem',
-          private_key: support_path + 'pems/client/foo-key.pem',
-          certificate: support_path + 'pems/client/foo-cert.pem'
-        }
-        # ap options
-        options
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/cacert.pem',
+                private_key: support_path + 'pems/client/foo-key.pem',
+                certificate: support_path + 'pems/client/foo-cert.pem'
+            }
+        )
     end
 
     describe '.new' do
@@ -90,10 +92,52 @@ describe Cuboid::RPC::Client::Base do
             end
 
             context 'with invalid SSL options' do
+                around do |example|
+                    # Clear any cached file handles from previous tests
+                    Raktr::Connection::TLS::CERTIFICATES.clear if defined?(Raktr::Connection::TLS::CERTIFICATES)
+                    
+                    # Store original environment
+                    original_env = {
+                        cert: ENV['RAKTR_TLS_SERVER_CERTIFICATE'],
+                        key: ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'],
+                        pub: ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'],
+                        ca: ENV['RAKTR_TLS_CA']
+                    }
+                    
+                    begin
+                        # Set environment variables to enable mTLS on the server
+                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
+                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
+                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
+                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
+                        
+                        example.run
+                    ensure
+                        # Restore original environment
+                        if original_env[:cert]
+                            ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = original_env[:cert]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                        end
+                        if original_env[:key]
+                            ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = original_env[:key]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                        end
+                        if original_env[:pub]
+                            ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = original_env[:pub]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                        end
+                        if original_env[:ca]
+                            ENV['RAKTR_TLS_CA'] = original_env[:ca]
+                        else
+                            ENV.delete('RAKTR_TLS_CA')
+                        end
+                    end
+                end
+                
                 it 'throws an exception' do
-                    client_ssl_options.delete :ssl_pkey
-                    client_ssl_options.delete :ssl_cert
-
                     Server.new( server_ssl_options ) do |server|
                         raised = false
                         begin
@@ -109,6 +153,51 @@ describe Cuboid::RPC::Client::Base do
             end
 
             context 'with no SSL options' do
+                around do |example|
+                    # Clear any cached file handles from previous tests
+                    Raktr::Connection::TLS::CERTIFICATES.clear if defined?(Raktr::Connection::TLS::CERTIFICATES)
+                    
+                    # Store original environment
+                    original_env = {
+                        cert: ENV['RAKTR_TLS_SERVER_CERTIFICATE'],
+                        key: ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'],
+                        pub: ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'],
+                        ca: ENV['RAKTR_TLS_CA']
+                    }
+                    
+                    begin
+                        # Set environment variables to enable mTLS on the server
+                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
+                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
+                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
+                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
+                        
+                        example.run
+                    ensure
+                        # Restore original environment
+                        if original_env[:cert]
+                            ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = original_env[:cert]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                        end
+                        if original_env[:key]
+                            ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = original_env[:key]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                        end
+                        if original_env[:pub]
+                            ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = original_env[:pub]
+                        else
+                            ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                        end
+                        if original_env[:ca]
+                            ENV['RAKTR_TLS_CA'] = original_env[:ca]
+                        else
+                            ENV.delete('RAKTR_TLS_CA')
+                        end
+                    end
+                end
+                
                 it 'throws an exception' do
                     Server.new( server_ssl_options ) do |server|
                         raised = false
