@@ -59,6 +59,7 @@ class Agent
         trap_interrupts { shutdown }
 
         @instances = []
+        @spawns_in_progress = 0
 
         Cuboid::Application.application.agent_services.each do |name, service|
             @server.add_handler( name.to_s, service.new( @options, self ) )
@@ -183,11 +184,13 @@ class Agent
             return
         end
 
-        if System.max_utilization?
+        # Check if we have capacity including spawns in progress
+        if System.slots.available <= @spawns_in_progress
             block.call
             return
         end
 
+        @spawns_in_progress += 1
         spawn_instance do |info|
             info['owner']   = owner
             info['helpers'] = helpers
@@ -195,6 +198,8 @@ class Agent
             @instances << info
 
             block.call info
+
+            @spawns_in_progress -= 1
         end
     end
 
