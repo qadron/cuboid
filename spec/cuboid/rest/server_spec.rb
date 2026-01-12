@@ -85,6 +85,47 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'SSL options', if: !Cuboid.windows? do
+        around do |example|
+            # Store and clear Raktr TLS environment variables to prevent interference from RPC tests
+            original_env = {
+                cert: ENV['RAKTR_TLS_SERVER_CERTIFICATE'],
+                key: ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'],
+                pub: ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'],
+                ca: ENV['RAKTR_TLS_CA']
+            }
+            
+            begin
+                ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                ENV.delete('RAKTR_TLS_CA')
+                
+                example.run
+            ensure
+                # Restore original environment
+                if original_env[:cert]
+                    ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = original_env[:cert]
+                else
+                    ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                end
+                if original_env[:key]
+                    ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = original_env[:key]
+                else
+                    ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                end
+                if original_env[:pub]
+                    ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = original_env[:pub]
+                else
+                    ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                end
+                if original_env[:ca]
+                    ENV['RAKTR_TLS_CA'] = original_env[:ca]
+                else
+                    ENV.delete('RAKTR_TLS_CA')
+                end
+            end
+        end
+
         let(:ssl_key) { nil }
         let(:ssl_cert) { nil }
         let(:ssl_ca) { nil }
