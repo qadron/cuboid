@@ -179,8 +179,11 @@ describe Cuboid::RPC::Server::Agent do
 
                         # Wait for the actual OS processes to exit, not just RPC to die
                         pids_to_free.each do |pid|
+                            timeout = 50  # 5 seconds max wait
                             while sleep 0.1
-                                break unless Cuboid::Processes::Manager.alive?( pid )
+                                timeout -= 1
+                                break if timeout <= 0
+                                break unless Cuboid::Processes::Manager.alive?(pid)
                             end
                         end
 
