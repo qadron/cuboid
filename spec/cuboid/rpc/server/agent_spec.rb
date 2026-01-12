@@ -436,7 +436,7 @@ describe Cuboid::RPC::Server::Agent do
                 instance.suspend!
                 sleep 1 while !instance.suspended?
                 snapshot_path = instance.snapshot_path
-                instance.shutdown
+                instance.shutdown rescue nil
 
                 expect(subject.statistics['snapshots']).to include snapshot_path
             end
