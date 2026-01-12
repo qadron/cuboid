@@ -62,6 +62,26 @@ describe Cuboid::RPC::Client::Base do
         }
     end
 
+    # Helper method to configure mTLS environment and run a block
+    def with_mtls_enabled
+        # Clear any cached file handles from previous tests
+        Raktr::Connection::TLS::CERTIFICATES.clear if defined?(Raktr::Connection::TLS::CERTIFICATES)
+        
+        # Set environment variables to enable mTLS on the server
+        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
+        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
+        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
+        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
+
+        yield
+    ensure
+        # Clean up environment variables
+        ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+        ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+        ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+        ENV.delete('RAKTR_TLS_CA')
+    end
+
     describe '.new' do
         context 'without SSL options' do
             it 'connects to a server' do
@@ -87,13 +107,7 @@ describe Cuboid::RPC::Client::Base do
                     client_ssl_options.delete :ssl_pkey
                     client_ssl_options.delete :ssl_cert
 
-                    begin
-                        # Set environment variables to enable mTLS on the server
-                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
-                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
-                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
-                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
-
+                    with_mtls_enabled do
                         Server.new( server_ssl_options ) do |server|
                             puts "\n[DEBUG] Server started with SSL at: #{server.url}"
                             puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
@@ -132,28 +146,13 @@ describe Cuboid::RPC::Client::Base do
                                 "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with invalid SSL options. " \
                                 "Instead, #{error_details}"
                         end
-                    ensure
-                        # Clean up environment variables
-                        ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
-                        ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
-                        ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
-                        ENV.delete('RAKTR_TLS_CA')
                     end
                 end
             end
 
             context 'with no SSL options' do
                 it 'throws an exception' do
-                    begin
-                        # Clear any cached file handles from previous tests
-                        Raktr::Connection::TLS::CERTIFICATES.clear if defined?(Raktr::Connection::TLS::CERTIFICATES)
-                        
-                        # Set environment variables to enable mTLS on the server
-                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
-                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
-                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
-                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
-
+                    with_mtls_enabled do
                         Server.new( server_ssl_options ) do |server|
                             puts "\n[DEBUG] Server started with SSL at: #{server.url}"
                             puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
@@ -192,12 +191,6 @@ describe Cuboid::RPC::Client::Base do
                                 "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with no SSL options. " \
                                 "Instead, #{error_details}"
                         end
-                    ensure
-                        # Clean up environment variables
-                        ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
-                        ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
-                        ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
-                        ENV.delete('RAKTR_TLS_CA')
                     end
                 end
             end
