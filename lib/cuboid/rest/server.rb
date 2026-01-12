@@ -125,7 +125,6 @@ class Server < Sinatra::Base
 
             ssl = false
             if (tls = options[:tls]) && tls[:private_key] && tls[:certificate]
-                ap tls
                 ctx = Puma::MiniSSL::Context.new
 
                 ctx.key  = tls[:private_key]
