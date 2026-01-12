@@ -168,7 +168,7 @@ describe Cuboid::RPC::Server::Agent do
                     it 'returns Instance info' do
                         subject.instances[0...free].each do |info|
                             service = instance_connect( info['url'], info['token'] )
-                            service.shutdown
+                            service.shutdown rescue nil
 
                             while sleep 0.1
                                 service.alive? rescue break

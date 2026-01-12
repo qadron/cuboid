@@ -241,6 +241,7 @@ class Instance
         # without going through the Reactor.
         Thread.new do
             @server.shutdown
+            @raktr.stop
             block.call true if block_given?
         end
 
