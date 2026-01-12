@@ -114,9 +114,10 @@ describe Cuboid::RPC::Client::Base do
                         puts "[DEBUG] Exception class: #{exception_class}"
                         puts "[DEBUG] Exception message: #{exception_message}"
                         
+                        error_details = exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"
                         expect(raised).to be_truthy, 
                             "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with invalid SSL options. " \
-                            "Instead, #{exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"}"
+                            "Instead, #{error_details}"
                     end
                 end
             end
