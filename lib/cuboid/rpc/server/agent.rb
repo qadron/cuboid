@@ -154,7 +154,7 @@ class Agent
     #   Depending on availability:
     #
     #   * `Hash`: Connection and proc info.
-    #   * `nil`: Max utilization or currently spawning, wait and retry.
+    #   * `nil`: Max utilization, wait and retry.
     def spawn( options = {}, &block )
         options      = options.my_symbolize_keys
         strategy     = options.delete(:strategy)
