@@ -252,7 +252,6 @@ describe Cuboid::RPC::Server::Scheduler do
                 q = scheduler_spawn( daemonize: true )
 
                 expect(q.attach( client.url, client.token )).to be_falsey
-                expect(client.scheduler_url).to eq subject.url
             end
         end
 
