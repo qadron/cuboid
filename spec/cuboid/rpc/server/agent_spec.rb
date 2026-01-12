@@ -166,12 +166,21 @@ describe Cuboid::RPC::Server::Agent do
                     let(:free) { slots - 1 }
 
                     it 'returns Instance info' do
+                        pids_to_free = []
                         subject.instances[0...free].each do |info|
+                            pids_to_free << info['pid']
                             service = instance_connect( info['url'], info['token'] )
                             service.shutdown
 
                             while sleep 0.1
                                 service.alive? rescue break
+                            end
+                        end
+
+                        # Wait for the actual OS processes to exit, not just RPC to die
+                        pids_to_free.each do |pid|
+                            while sleep 0.1
+                                break unless Cuboid::Processes::Manager.alive?( pid )
                             end
                         end
 
