@@ -57,7 +57,8 @@ describe Cuboid::RPC::Client::Base do
             tls: {
                 ca:          support_path + 'pems/ca-cert.pem',
                 private_key: support_path + 'pems/client/key.pem',
-                certificate: support_path + 'pems/client/cert.pem'
+                certificate: support_path + 'pems/client/cert.pem',
+                public_key:  support_path + 'pems/client/pub.pem'
             }
         )
     end
