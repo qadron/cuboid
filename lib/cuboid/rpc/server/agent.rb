@@ -187,7 +187,7 @@ class Agent
         # Check if we have capacity including spawns in progress.
         # This prevents a race condition where multiple rapid spawn requests
         # could all pass the availability check before any of them register
-        # their PIDs with System.slots.use(), potentially over-allocating slots.
+        # their PIDs in the System::Slots @pids set, potentially over-allocating slots.
         if System.slots.available <= @spawns_in_progress
             block.call
             return
