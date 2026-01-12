@@ -7,7 +7,9 @@ Rest::Server.run!(
     username: Options.datastore['username'],
     password: Options.datastore['password'],
 
-    ssl_ca:          Options.rpc.ssl_ca,
-    ssl_key:         Options.rpc.server_ssl_private_key,
-    ssl_certificate: Options.rpc.server_ssl_certificate
+    tls: {
+      ca:          Options.rpc.ssl_ca,
+      private_key: Options.rpc.server_ssl_private_key,
+      certificate: Options.rpc.server_ssl_certificate
+    }
 )
