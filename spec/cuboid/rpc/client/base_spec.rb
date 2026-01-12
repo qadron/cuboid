@@ -41,19 +41,32 @@ describe Cuboid::RPC::Client::Base do
     end
 
     let(:server_ssl_options) do
-        options.merge(
-            ssl_ca:   support_path + 'pems/cacert.pem',
-            ssl_pkey: support_path + 'pems/server/key.pem',
-            ssl_cert: support_path + 'pems/server/cert.pem'
-        )
+        options[:tls] = {
+          ca:          support_path + 'pems/cacert.pem',
+          public_key:  support_path + 'pems/server/pub.pem',
+          private_key: support_path + 'pems/server/key.pem',
+          certificate: support_path + 'pems/server/cert.pem'
+        }
+        options
     end
 
     let(:client_ssl_options) do
-        {
-            ssl_ca:   support_path + 'pems/cacert.pem',
-            ssl_pkey: support_path + 'pems/client/key.pem',
-            ssl_cert: support_path + 'pems/client/cert.pem'
+        options[:tls] = {
+          ca:          support_path + 'pems/cacert.pem',
+          private_key: support_path + 'pems/client/key.pem',
+          certificate: support_path + 'pems/client/cert.pem'
         }
+        options
+    end
+
+    let(:invalid_client_ssl_options) do
+        options[:tls] = {
+          ca:          support_path + 'pems/cacert.pem',
+          private_key: support_path + 'pems/client/foo-key.pem',
+          certificate: support_path + 'pems/client/foo-cert.pem'
+        }
+        # ap options
+        options
     end
 
     describe '.new' do
@@ -84,7 +97,7 @@ describe Cuboid::RPC::Client::Base do
                     Server.new( server_ssl_options ) do |server|
                         raised = false
                         begin
-                            client = described_class.new( server.url, nil, client_ssl_options )
+                            client = described_class.new( server.url, nil, invalid_client_ssl_options )
                             client.call( "foo.bar" )
                         rescue Toq::Exceptions::ConnectionError
                             raised = true
