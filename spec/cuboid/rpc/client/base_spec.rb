@@ -82,15 +82,41 @@ describe Cuboid::RPC::Client::Base do
                     client_ssl_options.delete :ssl_cert
 
                     Server.new( server_ssl_options ) do |server|
+                        puts "\n[DEBUG] Server started with SSL at: #{server.url}"
+                        puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
+                        puts "[DEBUG] Client SSL options (after deletion): #{client_ssl_options.inspect}"
+                        
                         raised = false
+                        exception_class = nil
+                        exception_message = nil
+                        
                         begin
+                            puts "[DEBUG] Creating client with URL: #{server.url}"
                             client = described_class.new( server.url, nil, client_ssl_options )
-                            client.call( "foo.bar" )
-                        rescue Toq::Exceptions::ConnectionError
+                            puts "[DEBUG] Client created successfully: #{client.inspect}"
+                            
+                            puts "[DEBUG] Attempting to call foo.bar..."
+                            result = client.call( "foo.bar" )
+                            puts "[DEBUG] Call succeeded with result: #{result.inspect}"
+                        rescue Toq::Exceptions::ConnectionError => e
                             raised = true
+                            exception_class = e.class
+                            exception_message = e.message
+                            puts "[DEBUG] Caught expected ConnectionError: #{e.message}"
+                        rescue => e
+                            exception_class = e.class
+                            exception_message = e.message
+                            puts "[DEBUG] Caught unexpected exception #{e.class}: #{e.message}"
+                            puts "[DEBUG] Backtrace: #{e.backtrace.first(5).join("\n")}"
                         end
 
-                        expect(raised).to be_truthy
+                        puts "[DEBUG] Exception raised: #{raised}"
+                        puts "[DEBUG] Exception class: #{exception_class}"
+                        puts "[DEBUG] Exception message: #{exception_message}"
+                        
+                        expect(raised).to be_truthy, 
+                            "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with invalid SSL options. " \
+                            "Instead, #{exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"}"
                     end
                 end
             end
