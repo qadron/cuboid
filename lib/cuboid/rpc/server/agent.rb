@@ -156,11 +156,6 @@ class Agent
     #   * `Hash`: Connection and proc info.
     #   * `nil`: Max utilization or currently spawning, wait and retry.
     def spawn( options = {}, &block )
-        if @spawning
-            block.call nil
-            return
-        end
-
         options      = options.my_symbolize_keys
         strategy     = options.delete(:strategy)
         owner        = options[:owner]
@@ -193,7 +188,6 @@ class Agent
             return
         end
 
-        @spawning = true
         spawn_instance do |info|
             info['owner']   = owner
             info['helpers'] = helpers
@@ -201,8 +195,6 @@ class Agent
             @instances << info
 
             block.call info
-
-            @spawning = false
         end
     end
 
