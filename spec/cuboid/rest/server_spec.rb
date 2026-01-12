@@ -85,7 +85,7 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'SSL options', if: !Cuboid.windows? do
-        around do |example|
+        def with_isolated_environment
             # Store and clear Raktr TLS environment variables to prevent interference from RPC tests
             original_env = {
                 cert: ENV['RAKTR_TLS_SERVER_CERTIFICATE'],
@@ -100,30 +100,28 @@ describe Cuboid::Rest::Server do
                 ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
                 ENV.delete('RAKTR_TLS_CA')
                 
-                example.run
+                yield
             ensure
                 # Restore original environment
-                if original_env[:cert]
-                    ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = original_env[:cert]
-                else
-                    ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
-                end
-                if original_env[:key]
-                    ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = original_env[:key]
-                else
-                    ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
-                end
-                if original_env[:pub]
-                    ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = original_env[:pub]
-                else
-                    ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
-                end
-                if original_env[:ca]
-                    ENV['RAKTR_TLS_CA'] = original_env[:ca]
-                else
-                    ENV.delete('RAKTR_TLS_CA')
+                original_env.each do |key, value|
+                    env_key = case key
+                    when :cert then 'RAKTR_TLS_SERVER_CERTIFICATE'
+                    when :key then 'RAKTR_TLS_SERVER_PRIVATE_KEY'
+                    when :pub then 'RAKTR_TLS_SERVER_PUBLIC_KEY'
+                    when :ca then 'RAKTR_TLS_CA'
+                    end
+                    
+                    if value
+                        ENV[env_key] = value
+                    else
+                        ENV.delete(env_key)
+                    end
                 end
             end
+        end
+
+        around do |example|
+            with_isolated_environment { example.run }
         end
 
         let(:ssl_key) { nil }
