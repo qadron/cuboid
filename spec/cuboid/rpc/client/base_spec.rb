@@ -43,7 +43,7 @@ describe Cuboid::RPC::Client::Base do
     let(:server_ssl_options) do
         options.merge(
             tls: {
-                ca:          support_path + 'pems/cacert.pem',
+                ca:          support_path + 'pems/ca-cert.pem',
                 public_key:  support_path + 'pems/server/pub.pem',
                 private_key: support_path + 'pems/server/key.pem',
                 certificate: support_path + 'pems/server/cert.pem',
@@ -55,7 +55,7 @@ describe Cuboid::RPC::Client::Base do
     let(:client_ssl_options) do
         options.merge(
             tls: {
-                ca:          support_path + 'pems/cacert.pem',
+                ca:          support_path + 'pems/ca-cert.pem',
                 private_key: support_path + 'pems/client/key.pem',
                 certificate: support_path + 'pems/client/cert.pem'
             }
@@ -65,7 +65,7 @@ describe Cuboid::RPC::Client::Base do
     let(:invalid_client_ssl_options) do
         options.merge(
             tls: {
-                ca:          support_path + 'pems/cacert.pem',
+                ca:          support_path + 'pems/ca-cert.pem',
                 private_key: support_path + 'pems/client/foo-key.pem',
                 certificate: support_path + 'pems/client/foo-cert.pem'
             }
