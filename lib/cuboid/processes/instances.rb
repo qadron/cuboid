@@ -159,12 +159,11 @@ class Instances
 
     def kill( url )
         service = connect( url )
-        service.consumed_pids do |pids|
-            service.shutdown do
-                # Make sure....
-                Manager.kill_many pids
-            end
-        end
+
+        pids = service.consumed_pids
+
+        service.shutdown rescue nil
+        Manager.kill_many pids
 
         @list.delete url
     end
