@@ -1,6 +1,12 @@
 require 'singleton'
 require 'raktr'
 
+begin
+    require 'sys/proctable'
+rescue LoadError
+    # sys-proctable not available, will use fallback method
+end
+
 module Cuboid
 module Processes
 
@@ -142,24 +148,28 @@ class Manager
         end
 
         # Try using sys-proctable for more reliable process state checking
-        begin
-            require 'sys/proctable'
-            
-            # Check if process exists and is not a zombie
-            process_info = Sys::ProcTable.ps(pid: pid)
-            if process_info
-                # On Linux, check the state field to exclude zombie processes
-                # 'Z' = zombie, 'X' = dead
-                if process_info.respond_to?(:state)
-                    return !['Z', 'X'].include?(process_info.state)
+        if defined?(Sys::ProcTable)
+            begin
+                # Check if process exists and is not a zombie
+                process_info = Sys::ProcTable.ps(pid: pid)
+                if process_info
+                    # Check the state field to exclude zombie/dead processes
+                    # On Unix-like systems: 'Z' = zombie, 'X' = dead
+                    # This prevents counting processes that are waiting to be reaped
+                    if process_info.respond_to?(:state)
+                        return !['Z', 'X'].include?(process_info.state)
+                    end
+                    return true
                 end
-                return true
+                return false
+            rescue Errno::ESRCH, Errno::EPERM, NoMethodError
+                # Process not found, permission denied, or unexpected structure
+                return false
             end
-            return false
-        rescue LoadError, StandardError
-            # Fallback to signal 0 method if sys-proctable isn't available or fails
-            !!(Process.kill( 0, pid ) rescue false)
         end
+        
+        # Fallback to signal 0 method if sys-proctable isn't available
+        !!(Process.kill( 0, pid ) rescue false)
     end
 
     # @param    [Array<Integer>]   pids
