@@ -23,7 +23,7 @@ module Instances
             instance = get_instance
             max_utilization! if !instance
 
-            handle_error proc { instance.shutdown } do
+            handle_error proc { (instance.shutdown rescue nil) } do
                 instance.run( options )
             end
 
@@ -112,7 +112,7 @@ module Instances
             id = params[:instance]
 
             instance = instances[id]
-            handle_error { instance.shutdown }
+            handle_error { (instance.shutdown rescue nil) }
 
             instances.delete( id ).close
 

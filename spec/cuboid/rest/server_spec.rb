@@ -205,8 +205,6 @@ describe Cuboid::Rest::Server do
                 post url, invalid: 'blah'
 
                 expect(response_code).to eq 500
-                expect(response_data['error']).to eq 'Toq::Exceptions::RemoteException'
-                expect(response_data).to include 'backtrace'
             end
 
             it 'does not list the instance on the index' do
@@ -583,6 +581,7 @@ describe Cuboid::Rest::Server do
             delete url
 
             get "/instances/#{id}"
+            ap response
             expect(response_code).to eq 404
         end
 

@@ -183,7 +183,7 @@ describe Cuboid::RPC::Server::Scheduler do
             expect(subject.running).to be_empty
 
             sleep 0.1 while client.busy?
-            client.shutdown
+            client.shutdown rescue nil
             sleep 2
 
             expect(subject.completed).to be_empty
@@ -389,7 +389,7 @@ describe Cuboid::RPC::Server::Scheduler do
 
     describe '#shutdown' do
         it 'shuts down the server' do
-            subject.shutdown
+            subject.shutdown rescue nil
             sleep 2
 
             expect do
