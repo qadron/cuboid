@@ -191,15 +191,23 @@ class Agent
         end
 
         @spawns_in_progress += 1
-        spawn_instance do |info|
-            info['owner']   = owner
-            info['helpers'] = helpers
+        
+        begin
+            spawn_instance do |info|
+                begin
+                    info['owner']   = owner
+                    info['helpers'] = helpers
 
-            @instances << info
+                    @instances << info
 
-            block.call info
-
+                    block.call info
+                ensure
+                    @spawns_in_progress -= 1
+                end
+            end
+        rescue => e
             @spawns_in_progress -= 1
+            raise
         end
     end
 
