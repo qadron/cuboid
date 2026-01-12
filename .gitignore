@@ -25,3 +25,4 @@ target
 *.crf
 *.csf
 .rake_tasks~
+vendor/bundle/
