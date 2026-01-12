@@ -44,7 +44,13 @@ describe Cuboid::RPC::Client::Base do
         options.merge(
             ssl_ca:   support_path + 'pems/cacert.pem',
             ssl_pkey: support_path + 'pems/server/key.pem',
-            ssl_cert: support_path + 'pems/server/cert.pem'
+            ssl_cert: support_path + 'pems/server/cert.pem',
+            tls: {
+                certificate: support_path + 'pems/server/cert.pem',
+                private_key: support_path + 'pems/server/key.pem',
+                public_key:  support_path + 'pems/server/pub.pem',
+                ca:          support_path + 'pems/cacert.pem'
+            }
         )
     end
 
@@ -81,86 +87,117 @@ describe Cuboid::RPC::Client::Base do
                     client_ssl_options.delete :ssl_pkey
                     client_ssl_options.delete :ssl_cert
 
-                    Server.new( server_ssl_options ) do |server|
-                        puts "\n[DEBUG] Server started with SSL at: #{server.url}"
-                        puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
-                        puts "[DEBUG] Client SSL options (after deletion): #{client_ssl_options.inspect}"
-                        
-                        raised = false
-                        exception_class = nil
-                        exception_message = nil
-                        
-                        begin
-                            puts "[DEBUG] Creating client with URL: #{server.url}"
-                            client = described_class.new( server.url, nil, client_ssl_options )
-                            puts "[DEBUG] Client created successfully: #{client.inspect}"
-                            
-                            puts "[DEBUG] Attempting to call foo.bar..."
-                            result = client.call( "foo.bar" )
-                            puts "[DEBUG] Call succeeded with result: #{result.inspect}"
-                        rescue Toq::Exceptions::ConnectionError => e
-                            raised = true
-                            exception_class = e.class
-                            exception_message = e.message
-                            puts "[DEBUG] Caught expected ConnectionError: #{e.message}"
-                        rescue => e
-                            exception_class = e.class
-                            exception_message = e.message
-                            puts "[DEBUG] Caught unexpected exception #{e.class}: #{e.message}"
-                            puts "[DEBUG] Backtrace: #{e.backtrace.first(5).join("\n")}"
-                        end
+                    begin
+                        # Set environment variables to enable mTLS on the server
+                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
+                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
+                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
+                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
 
-                        puts "[DEBUG] Exception raised: #{raised}"
-                        puts "[DEBUG] Exception class: #{exception_class}"
-                        puts "[DEBUG] Exception message: #{exception_message}"
-                        
-                        error_details = exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"
-                        expect(raised).to be_truthy, 
-                            "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with invalid SSL options. " \
-                            "Instead, #{error_details}"
+                        Server.new( server_ssl_options ) do |server|
+                            puts "\n[DEBUG] Server started with SSL at: #{server.url}"
+                            puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
+                            puts "[DEBUG] Client SSL options (after deletion): #{client_ssl_options.inspect}"
+                            
+                            raised = false
+                            exception_class = nil
+                            exception_message = nil
+                            
+                            begin
+                                puts "[DEBUG] Creating client with URL: #{server.url}"
+                                client = described_class.new( server.url, nil, client_ssl_options )
+                                puts "[DEBUG] Client created successfully: #{client.inspect}"
+                                
+                                puts "[DEBUG] Attempting to call foo.bar..."
+                                result = client.call( "foo.bar" )
+                                puts "[DEBUG] Call succeeded with result: #{result.inspect}"
+                            rescue Toq::Exceptions::ConnectionError => e
+                                raised = true
+                                exception_class = e.class
+                                exception_message = e.message
+                                puts "[DEBUG] Caught expected ConnectionError: #{e.message}"
+                            rescue => e
+                                exception_class = e.class
+                                exception_message = e.message
+                                puts "[DEBUG] Caught unexpected exception #{e.class}: #{e.message}"
+                                puts "[DEBUG] Backtrace: #{e.backtrace.first(5).join("\n")}"
+                            end
+
+                            puts "[DEBUG] Exception raised: #{raised}"
+                            puts "[DEBUG] Exception class: #{exception_class}"
+                            puts "[DEBUG] Exception message: #{exception_message}"
+                            
+                            error_details = exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"
+                            expect(raised).to be_truthy, 
+                                "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with invalid SSL options. " \
+                                "Instead, #{error_details}"
+                        end
+                    ensure
+                        # Clean up environment variables
+                        ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                        ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                        ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                        ENV.delete('RAKTR_TLS_CA')
                     end
                 end
             end
 
             context 'with no SSL options' do
                 it 'throws an exception' do
-                    Server.new( server_ssl_options ) do |server|
-                        puts "\n[DEBUG] Server started with SSL at: #{server.url}"
-                        puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
-                        puts "[DEBUG] Client SSL options: #{empty_options.inspect}"
+                    begin
+                        # Clear any cached file handles from previous tests
+                        Raktr::Connection::TLS::CERTIFICATES.clear if defined?(Raktr::Connection::TLS::CERTIFICATES)
                         
-                        raised = false
-                        exception_class = nil
-                        exception_message = nil
-                        
-                        begin
-                            puts "[DEBUG] Creating client with URL: #{server.url}"
-                            client = described_class.new( server.url, nil, empty_options )
-                            puts "[DEBUG] Client created successfully: #{client.inspect}"
-                            
-                            puts "[DEBUG] Attempting to call foo.bar..."
-                            result = client.call( "foo.bar" )
-                            puts "[DEBUG] Call succeeded with result: #{result.inspect}"
-                        rescue Toq::Exceptions::ConnectionError => e
-                            raised = true
-                            exception_class = e.class
-                            exception_message = e.message
-                            puts "[DEBUG] Caught expected ConnectionError: #{e.message}"
-                        rescue => e
-                            exception_class = e.class
-                            exception_message = e.message
-                            puts "[DEBUG] Caught unexpected exception #{e.class}: #{e.message}"
-                            puts "[DEBUG] Backtrace: #{e.backtrace.first(5).join("\n")}"
-                        end
+                        # Set environment variables to enable mTLS on the server
+                        ENV['RAKTR_TLS_SERVER_CERTIFICATE'] = support_path + 'pems/server/cert.pem'
+                        ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'] = support_path + 'pems/server/key.pem'
+                        ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'] = support_path + 'pems/server/pub.pem'
+                        ENV['RAKTR_TLS_CA'] = support_path + 'pems/cacert.pem'
 
-                        puts "[DEBUG] Exception raised: #{raised}"
-                        puts "[DEBUG] Exception class: #{exception_class}"
-                        puts "[DEBUG] Exception message: #{exception_message}"
-                        
-                        error_details = exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"
-                        expect(raised).to be_truthy,
-                            "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with no SSL options. " \
-                            "Instead, #{error_details}"
+                        Server.new( server_ssl_options ) do |server|
+                            puts "\n[DEBUG] Server started with SSL at: #{server.url}"
+                            puts "[DEBUG] Server SSL options: #{server_ssl_options.inspect}"
+                            puts "[DEBUG] Client SSL options: #{empty_options.inspect}"
+                            
+                            raised = false
+                            exception_class = nil
+                            exception_message = nil
+                            
+                            begin
+                                puts "[DEBUG] Creating client with URL: #{server.url}"
+                                client = described_class.new( server.url, nil, empty_options )
+                                puts "[DEBUG] Client created successfully: #{client.inspect}"
+                                
+                                puts "[DEBUG] Attempting to call foo.bar..."
+                                result = client.call( "foo.bar" )
+                                puts "[DEBUG] Call succeeded with result: #{result.inspect}"
+                            rescue Toq::Exceptions::ConnectionError => e
+                                raised = true
+                                exception_class = e.class
+                                exception_message = e.message
+                                puts "[DEBUG] Caught expected ConnectionError: #{e.message}"
+                            rescue => e
+                                exception_class = e.class
+                                exception_message = e.message
+                                puts "[DEBUG] Caught unexpected exception #{e.class}: #{e.message}"
+                                puts "[DEBUG] Backtrace: #{e.backtrace.first(5).join("\n")}"
+                            end
+
+                            puts "[DEBUG] Exception raised: #{raised}"
+                            puts "[DEBUG] Exception class: #{exception_class}"
+                            puts "[DEBUG] Exception message: #{exception_message}"
+                            
+                            error_details = exception_class ? "got #{exception_class}: #{exception_message}" : "no exception was raised"
+                            expect(raised).to be_truthy,
+                                "Expected Toq::Exceptions::ConnectionError to be raised when connecting to SSL server with no SSL options. " \
+                                "Instead, #{error_details}"
+                        end
+                    ensure
+                        # Clean up environment variables
+                        ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
+                        ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
+                        ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
+                        ENV.delete('RAKTR_TLS_CA')
                     end
                 end
             end
