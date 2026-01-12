@@ -85,45 +85,6 @@ describe Cuboid::Rest::Server do
     end
 
     describe 'SSL options', if: !Cuboid.windows? do
-        def with_isolated_environment
-            # Store and clear Raktr TLS environment variables to prevent interference from RPC tests
-            original_env = {
-                cert: ENV['RAKTR_TLS_SERVER_CERTIFICATE'],
-                key: ENV['RAKTR_TLS_SERVER_PRIVATE_KEY'],
-                pub: ENV['RAKTR_TLS_SERVER_PUBLIC_KEY'],
-                ca: ENV['RAKTR_TLS_CA']
-            }
-            
-            begin
-                ENV.delete('RAKTR_TLS_SERVER_CERTIFICATE')
-                ENV.delete('RAKTR_TLS_SERVER_PRIVATE_KEY')
-                ENV.delete('RAKTR_TLS_SERVER_PUBLIC_KEY')
-                ENV.delete('RAKTR_TLS_CA')
-                
-                yield
-            ensure
-                # Restore original environment
-                original_env.each do |key, value|
-                    env_key = case key
-                    when :cert then 'RAKTR_TLS_SERVER_CERTIFICATE'
-                    when :key then 'RAKTR_TLS_SERVER_PRIVATE_KEY'
-                    when :pub then 'RAKTR_TLS_SERVER_PUBLIC_KEY'
-                    when :ca then 'RAKTR_TLS_CA'
-                    end
-                    
-                    if value
-                        ENV[env_key] = value
-                    else
-                        ENV.delete(env_key)
-                    end
-                end
-            end
-        end
-
-        around do |example|
-            with_isolated_environment { example.run }
-        end
-
         let(:ssl_key) { nil }
         let(:ssl_cert) { nil }
         let(:ssl_ca) { nil }
