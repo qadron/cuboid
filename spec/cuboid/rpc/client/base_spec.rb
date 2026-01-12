@@ -41,21 +41,36 @@ describe Cuboid::RPC::Client::Base do
     end
 
     let(:server_ssl_options) do
-        options[:tls] = {
-          ca:          support_path + 'pems/cacert.pem',
-          private_key: support_path + 'pems/server/key.pem',
-          certificate: support_path + 'pems/server/cert.pem'
-        }
-        options
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/ca-cert.pem',
+                public_key:  support_path + 'pems/server/pub.pem',
+                private_key: support_path + 'pems/server/key.pem',
+                certificate: support_path + 'pems/server/cert.pem',
+                verify_peer: true
+            }
+        )
     end
 
     let(:client_ssl_options) do
-        options[:tls] = {
-          ca:          support_path + 'pems/cacert.pem',
-          private_key: support_path + 'pems/client/key.pem',
-          certificate: support_path + 'pems/client/cert.pem'
-        }
-        options
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/ca-cert.pem',
+                private_key: support_path + 'pems/client/key.pem',
+                certificate: support_path + 'pems/client/cert.pem',
+                public_key:  support_path + 'pems/client/pub.pem'
+            }
+        )
+    end
+
+    let(:invalid_client_ssl_options) do
+        options.merge(
+            tls: {
+                ca:          support_path + 'pems/ca-cert.pem',
+                private_key: support_path + 'pems/client/foo-key.pem',
+                certificate: support_path + 'pems/client/foo-cert.pem'
+            }
+        )
     end
 
     describe '.new' do
@@ -80,13 +95,10 @@ describe Cuboid::RPC::Client::Base do
 
             context 'with invalid SSL options' do
                 it 'throws an exception' do
-                    client_ssl_options.delete :ssl_pkey
-                    client_ssl_options.delete :ssl_cert
-
                     Server.new( server_ssl_options ) do |server|
                         raised = false
                         begin
-                            client = described_class.new( server.url, nil, client_ssl_options )
+                            client = described_class.new( server.url, nil, invalid_client_ssl_options )
                             client.call( "foo.bar" )
                         rescue Toq::Exceptions::ConnectionError
                             raised = true

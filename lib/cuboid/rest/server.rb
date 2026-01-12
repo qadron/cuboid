@@ -124,16 +124,16 @@ class Server < Sinatra::Base
             server = Puma::Server.new( self )
 
             ssl = false
-            if options[:ssl_key] && options[:ssl_certificate]
+            if (tls = options[:tls]) && tls[:private_key] && tls[:certificate]
                 ctx = Puma::MiniSSL::Context.new
 
-                ctx.key  = options[:ssl_key]
-                ctx.cert = options[:ssl_certificate]
+                ctx.key  = tls[:private_key]
+                ctx.cert = tls[:certificate]
 
-                if options[:ssl_ca]
+                if tls[:ca]
                     puts 'CA provided, peer verification has been enabled.'
 
-                    ctx.ca          = options[:ssl_ca]
+                    ctx.ca          = tls[:ca]
                     ctx.verify_mode = Puma::MiniSSL::VERIFY_PEER |
                         Puma::MiniSSL::VERIFY_FAIL_IF_NO_PEER_CERT
                 else

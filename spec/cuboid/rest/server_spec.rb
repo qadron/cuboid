@@ -117,7 +117,7 @@ describe Cuboid::Rest::Server do
             end
 
             describe 'a CA is given' do
-                let(:ssl_ca) { "#{support_path}/pems/cacert.pem" }
+                let(:ssl_ca) { "#{support_path}/pems/ca-cert.pem" }
 
                 it 'enables peer verification' do
                     expect(Typhoeus.get( https_url, ssl_verifypeer: false ).code).to eq 0
@@ -125,6 +125,7 @@ describe Cuboid::Rest::Server do
                     expect(Typhoeus.get(
                         https_url,
                         ssl_verifypeer: true,
+                        ssl_verifyhost: 0,
                         sslcert:        "#{support_path}/pems/client/cert.pem",
                         sslkey:         "#{support_path}/pems/client/key.pem",
                         cainfo:         ssl_ca
