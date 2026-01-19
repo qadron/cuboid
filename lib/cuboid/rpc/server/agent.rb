@@ -59,6 +59,7 @@ class Agent
         trap_interrupts { shutdown }
 
         @instances = []
+        @spawns_in_progress = 0
 
         Cuboid::Application.application.agent_services.each do |name, service|
             @server.add_handler( name.to_s, service.new( @options, self ) )
@@ -154,13 +155,8 @@ class Agent
     #   Depending on availability:
     #
     #   * `Hash`: Connection and proc info.
-    #   * `nil`: Max utilization or currently spawning, wait and retry.
+    #   * `nil`: Max utilization, wait and retry.
     def spawn( options = {}, &block )
-        if @spawning
-            block.call nil
-            return
-        end
-
         options      = options.my_symbolize_keys
         strategy     = options.delete(:strategy)
         owner        = options[:owner]
@@ -188,21 +184,33 @@ class Agent
             return
         end
 
-        if System.max_utilization?
+        # Check if we have capacity including spawns in progress.
+        # This prevents a race condition where multiple rapid spawn requests
+        # could all pass the availability check before any of them register
+        # their PIDs in the System::Slots @pids set, potentially over-allocating slots.
+        if System.slots.available <= @spawns_in_progress
             block.call
             return
         end
 
-        @spawning = true
-        spawn_instance do |info|
-            info['owner']   = owner
-            info['helpers'] = helpers
+        @spawns_in_progress += 1
+        
+        begin
+            spawn_instance do |info|
+                begin
+                    info['owner']   = owner
+                    info['helpers'] = helpers
 
-            @instances << info
+                    @instances << info
 
-            block.call info
-
-            @spawning = false
+                    block.call info
+                ensure
+                    @spawns_in_progress -= 1
+                end
+            end
+        rescue => e
+            @spawns_in_progress -= 1
+            raise
         end
     end
 
