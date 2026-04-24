@@ -11,6 +11,7 @@ class Manager
     include Singleton
 
     RUNNER = "#{File.dirname( __FILE__ )}/executables/base.rb"
+    SPAWN_RETRIES = 10
 
     # @return   [Array<Integer>] PIDs of all running processes.
     attr_reader :pids
@@ -227,17 +228,23 @@ class Manager
         argv            = [executable, encoded_options]
 
 
-        # It's very, **VERY** important that we use this argument format as
-        # it bypasses the OS shell and we can thus count on a 1-to-1 process
-        # creation and that the PID we get will be for the actual process.
-        pid = Process.spawn(
-            {
-                'CUBOID_SPAWN_OPTIONS' => encoded_cuboid_options
-            },
-            RbConfig.ruby,
-            RUNNER,
-            *(argv + [spawn_options])
-        )
+        pid = nil
+        SPAWN_RETRIES.times do |i|
+            begin
+                # It's very, **VERY** important that we use this argument format as
+                # it bypasses the OS shell and we can thus count on a 1-to-1 process
+                # creation and that the PID we get will be for the actual process.
+                pid = Process.spawn(
+                    {
+                        'CUBOID_SPAWN_OPTIONS' => encoded_cuboid_options
+                    },
+                    RbConfig.ruby,
+                    RUNNER,
+                    *(argv + [spawn_options])
+                )
+                break if alive? pid
+                end
+        end
 
         self << pid
 
