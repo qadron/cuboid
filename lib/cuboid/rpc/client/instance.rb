@@ -17,6 +17,8 @@ class Instance
 
     class <<self
 
+        RETRIES = 5
+
         def when_ready( url, token, &block )
             options = Cuboid::Options.rpc.to_client_options.merge(
                 client_max_retries:   0,
@@ -27,10 +29,18 @@ class Instance
             raktr.run_in_thread
 
             client = new( url, token, options )
+            tries = 0
             raktr.delay( 0.1 ) do |task|
                 client.alive? do |r|
                     if r.rpc_exception?
+                        if tries >= RETRIES
+                            client.close
+                            block.call
+                            next
+                        end
+
                         raktr.delay( 0.1, &task )
+                        tries += 1
                         next
                     end
 
