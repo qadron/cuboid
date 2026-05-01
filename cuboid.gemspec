@@ -41,7 +41,7 @@ Gem::Specification.new do |s|
     s.add_dependency 'msgpack',             '~> 1.7.5'
 
     # Web server
-    s.add_dependency 'puma',                '~> 5.6.9'
+    s.add_dependency 'puma',                '~> 6.0'
 
     s.add_dependency 'base64'
 
