@@ -40,16 +40,7 @@ class Server
         # @option options [Boolean] :stateless  Stateless mode for the
         #   StreamableHTTPTransport (no per-session state). Default: false.
         def run!( options )
-            mcp_server = build_mcp_server( options )
-
-            transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(
-                mcp_server,
-                stateless: options.fetch( :stateless, false )
-            )
-
-            rack_app = build_rack_app( transport, options )
-
-            puma_server = Puma::Server.new( rack_app )
+            puma_server = Puma::Server.new( rack_app( options ) )
 
             ssl = configure_listener( puma_server, options )
 
@@ -62,6 +53,22 @@ class Server
             rescue Interrupt
                 puma_server.stop( true )
             end
+        end
+
+        # Build (without booting) the Rack app the MCP transport runs
+        # under. Exposed as a public class method so tests can hit it
+        # via Rack::Test without spinning up a Puma listener — and so
+        # consumers wanting to mount MCP inside a larger Rack/Sinatra
+        # tree can do so without involving `run!`.
+        def rack_app( options = {} )
+            mcp_server = build_mcp_server( options )
+
+            transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(
+                mcp_server,
+                stateless: options.fetch( :stateless, false )
+            )
+
+            build_rack_app( transport, options )
         end
 
         private
