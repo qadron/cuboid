@@ -274,16 +274,23 @@ module CoreTools
             end
         end
 
-        # Send TERM, give the engine ~2s to clean up its browser
-        # cluster + temp dirs, then SIGKILL if anything's still
-        # alive. Daemonised processes have no parent to wait() on, so
-        # we can't reap; we just verify exit by ESRCH on `kill 0`.
-        # All branches are best-effort — a missing PID, ESRCH, or
-        # EPERM are all silently ignored.
+        # Send TERM, give the engine up to ~10s to drain its browser
+        # cluster + at_exit chain (which is what unlinks per-engine
+        # temp dirs), then SIGKILL if anything's still alive. The
+        # earlier 2s grace was generally too short for engines with
+        # an active browser pool — they'd get SIGKILL'd mid-shutdown
+        # and leak `/tmp/<App>_Engine_<…>/` directories. Daemonised
+        # processes have no parent to wait() on, so we can't reap;
+        # we just verify exit by ESRCH on `kill 0`. All branches are
+        # best-effort — a missing PID, ESRCH, or EPERM are all
+        # silently ignored.
+        REAP_GRACE_SECONDS = 10.0
+
         def self.reap_engine_pid( pid )
             Process.kill( 'TERM', pid ) rescue nil
 
-            deadline = Process.clock_gettime( Process::CLOCK_MONOTONIC ) + 2.0
+            deadline = Process.clock_gettime( Process::CLOCK_MONOTONIC ) +
+                REAP_GRACE_SECONDS
             while Process.clock_gettime( Process::CLOCK_MONOTONIC ) < deadline
                 begin
                     Process.kill( 0, pid )
