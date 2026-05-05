@@ -234,35 +234,35 @@ describe Cuboid::MCP::Server do
         before do
             fake_application.mcp_service_for(:my_service, build_handler_with_tools)
             stub_instance('inst-1')
-            @app_options = { name: 'spectre-mcp', version: '7.7.7' }
+            @app_options = { name: 'custom-mcp', version: '7.7.7' }
         end
 
         it 'advertises them in serverInfo' do
             post_jsonrpc '/mcp', 'initialize', INITIALIZE_PARAMS
 
             info = JSON.parse(last_response.body)['result']['serverInfo']
-            info['name'].should    == 'spectre-mcp'
+            info['name'].should    == 'custom-mcp'
             info['version'].should == '7.7.7'
         end
     end
 
     context 'when the application class lives under a branded top-level namespace' do
-        # Synthesize a real-looking namespace mirroring SCNR/RKN: a
-        # `shortname` method (the brand the user wants advertised) and
-        # a `version` method (preferred over the VERSION constant when
-        # both are present). The dispatcher should pick the branded
-        # methods over the raw module name.
+        # Synthesize a real-looking namespace: a `shortname` method
+        # (the brand the user wants advertised) and a `version`
+        # method (preferred over the VERSION constant when both are
+        # present). The dispatcher should pick the branded methods
+        # over the raw module name.
         before do
-            stub_const('SpectreFake', Module.new)
-            SpectreFake.define_singleton_method(:shortname) { :spectre }
-            SpectreFake.define_singleton_method(:version)   { '9.9.9'   }
-            SpectreFake.const_set(
+            stub_const('BrandFake', Module.new)
+            BrandFake.define_singleton_method(:shortname) { :foo   }
+            BrandFake.define_singleton_method(:version)   { '9.9.9' }
+            BrandFake.const_set(
                 :Application,
-                Class.new(Cuboid::Application) { def self.name; 'SpectreFake::Application'; end }
+                Class.new(Cuboid::Application) { def self.name; 'BrandFake::Application'; end }
             )
 
-            Cuboid::Application.application = SpectreFake::Application
-            SpectreFake::Application.mcp_service_for(:my_service, build_handler_with_tools)
+            Cuboid::Application.application = BrandFake::Application
+            BrandFake::Application.mcp_service_for(:my_service, build_handler_with_tools)
             stub_instance('inst-1')
         end
 
@@ -270,10 +270,55 @@ describe Cuboid::MCP::Server do
             post_jsonrpc '/mcp', 'initialize', INITIALIZE_PARAMS
 
             info = JSON.parse(last_response.body)['result']['serverInfo']
-            info['name'].should    == 'spectre'
+            info['name'].should    == 'foo'
             info['version'].should == '9.9.9'
         end
 
+    end
+
+    context 'live route (`/mcp/live/<token>`)' do
+        # The route is loopback-only; Rack::Test sets REMOTE_ADDR to
+        # '127.0.0.1' by default which lets the loopback gate pass.
+
+        before(:each) do
+            # Reset Live registry between examples so tokens don't bleed.
+            Cuboid::MCP::Live.instance_variable_set(:@by_token, {})
+            Cuboid::MCP::Live.instance_variable_set(:@by_instance_id, {})
+            Cuboid::MCP::Live.transport = nil
+        end
+
+        it '410s when the token isn\'t registered' do
+            post '/mcp/live/no-such-token', '{}',
+                 { 'CONTENT_TYPE' => 'application/json' }
+
+            last_response.status.should == 410
+            JSON.parse(last_response.body)['error']
+                .should include('live token unknown')
+        end
+
+        it 'rejects pushes from non-loopback with 404' do
+            post '/mcp/live/whatever', '{}',
+                 { 'CONTENT_TYPE' => 'application/json',
+                   'REMOTE_ADDR'  => '203.0.113.5' }
+
+            last_response.status.should == 404
+            JSON.parse(last_response.body)['error']['message']
+                .should include('loopback')
+        end
+
+        it '400s on an undecodable body for the declared content type' do
+            # Register a token so we get past the 410 path.
+            Cuboid::MCP::Live.instance_variable_get(:@by_token)['tok'] = {
+                session_id: 'sess-1', instance_id: 'inst-x'
+            }
+
+            post '/mcp/live/tok', "\xff\xff\xff not json".b,
+                 { 'CONTENT_TYPE' => 'application/json' }
+
+            last_response.status.should == 400
+            JSON.parse(last_response.body)['error']
+                .should include('could not decode')
+        end
     end
 
     context 'when the namespace exposes only a VERSION constant (no branded methods)' do

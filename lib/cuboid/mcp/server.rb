@@ -13,6 +13,7 @@ JSON::Validator.use_multi_json = false
 
 require_relative 'auth'
 require_relative 'core_tools'
+require_relative 'live'
 require_relative '../server/instance_helpers'
 
 module Cuboid
@@ -44,6 +45,16 @@ class Server
             puma = Puma::Server.new( rack_app( options ) )
 
             ssl = configure_listener( puma, options )
+
+            # Configure the Live registry so its `url_for(token)` can
+            # synthesise the loopback URL the engine subprocess will
+            # POST live events to. Done after listener configuration so
+            # we know the resolved scheme.
+            Live.configure(
+                bind: options[:bind],
+                port: options[:port],
+                tls:  ssl
+            )
 
             puts "MCP server listening on " \
                  "http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}/mcp"
@@ -129,7 +140,10 @@ class Server
         # plumbing.
         include ::Cuboid::Server::InstanceHelpers
 
-        MCP_PATH_RE = %r{\A/mcp(?<rest>/.*)?\z}
+        # `/mcp/live/<token>` matches BEFORE `/mcp` would swallow it
+        # in the regex chain — order checks accordingly in `call`.
+        LIVE_PATH_RE = %r{\A/mcp/live/(?<token>[A-Za-z0-9_-]+)/?\z}
+        MCP_PATH_RE  = %r{\A/mcp(?<rest>/.*)?\z}
 
         def initialize( name: nil, version: nil, stateless: false )
             @name      = name
@@ -143,14 +157,47 @@ class Server
 
             path = env['PATH_INFO'].to_s
 
-            if (m = MCP_PATH_RE.match( path ))
+            if (m = LIVE_PATH_RE.match( path ))
+                handle_live_push( env, m[:token] )
+            elsif (m = MCP_PATH_RE.match( path ))
                 sub_env = env.dup
                 sub_env['PATH_INFO']   = m[:rest].to_s
                 sub_env['SCRIPT_NAME'] = "#{env['SCRIPT_NAME']}/mcp"
                 transport.call( sub_env )
             else
-                not_found( 'route does not match /mcp' )
+                not_found( 'route does not match /mcp or /mcp/live/<token>' )
             end
+        end
+
+        # Forward a single engine-side push (msgpack/json/yaml body) to
+        # the MCP session that registered the token. Loopback-only:
+        # the engine subprocess pushes from the same host, never from
+        # an external network. No auth — the token is the auth.
+        def handle_live_push( env, token )
+            remote = env['REMOTE_ADDR'].to_s
+            unless %w(127.0.0.1 ::1 ::ffff:127.0.0.1).include?( remote )
+                return not_found( 'live push must come from loopback' )
+            end
+
+            # Drain Rack's input. Rack 3 may have already consumed it
+            # for known content types; rewind defensively.
+            input = env['rack.input']
+            input.rewind if input.respond_to?( :rewind )
+            body = input.read
+
+            envelope =
+                begin
+                    Live.decode( env['CONTENT_TYPE'], body )
+                rescue => e
+                    return [ 400, { 'content-type' => 'application/json' },
+                             [ { error: "could not decode #{env['CONTENT_TYPE']}: #{e.class}" }.to_json ] ]
+                end
+
+            ok = Live.deliver( token, envelope )
+            return [ 410, { 'content-type' => 'application/json' },
+                     [ { error: 'live token unknown or session gone' }.to_json ] ] if !ok
+
+            [ 204, {}, [] ]
         end
 
         private
@@ -170,10 +217,17 @@ class Server
                         mcp_server.resources_read_handler( &read_handler )
                     end
 
-                    ::MCP::Server::Transports::StreamableHTTPTransport.new(
+                    t = ::MCP::Server::Transports::StreamableHTTPTransport.new(
                         mcp_server,
                         stateless: @stateless
                     )
+
+                    # Hand the transport to Live so `/mcp/live/<token>`
+                    # pushes can be relayed to the right session as
+                    # `notifications/cuboid/live` notifications.
+                    Live.transport = t
+
+                    t
                 end
             end
         end
@@ -316,11 +370,11 @@ class Server
 
         # Identity advertised in MCP `serverInfo` defaults to the running
         # Cuboid::Application's top-level namespace — preferring its
-        # branded `shortname`/`version` methods (e.g. `SCNR.shortname →
-        # :spectre`, `SCNR.version → "1.13"`) over the raw module name +
-        # VERSION constant. Falls back to 'cuboid' / Cuboid::VERSION
-        # when no application is registered (bare framework / specs).
-        # Explicit `name:` / `version:` passed to `run!` always win.
+        # branded `shortname` / `version` methods over the raw module
+        # name + VERSION constant. Falls back to 'cuboid' /
+        # Cuboid::VERSION when no application is registered (bare
+        # framework / specs). Explicit `name:` / `version:` passed to
+        # `run!` always win.
         def application_brand
             return @application_brand if defined?( @application_brand )
 
