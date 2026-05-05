@@ -2,6 +2,11 @@ require 'puma'
 require 'puma/minissl'
 require 'sinatra/base'
 require 'sinatra/contrib'
+# Rack 3 gemified Rack::Session out into the rack-session gem; sinatra-contrib
+# pulls it in transitively, but the Rack::Session::Pool constant only loads
+# when the session-pool file is required directly. Without this the
+# `use Rack::Session::Pool` line below NameErrors at boot.
+require 'rack/session/pool'
 
 module Cuboid
 module Rest
@@ -34,9 +39,26 @@ class Server < Sinatra::Base
 
     enable :logging
 
-    VALID_REPORT_FORMATS = %w(json xml yaml html.zip)
+    # sinatra-contrib's default `:json_encoder` is `MultiJson`, and its
+    # `resolve_encoder_action` tries `:encode` before `:generate`. Under
+    # multi_json 1.20+, `MultiJson.encode` is a deprecated alias to
+    # `dump` and emits a warning on every call. Pin the encoder to
+    # stdlib `JSON` (which exposes `generate`) to bypass the alias and
+    # silence the deprecation without a downstream gem bump.
+    set :json_encoder, ::JSON
 
     before do
+        # Rack 3 reads and consumes `rack.input` to build the params hash
+        # for known content types (application/x-www-form-urlencoded,
+        # multipart/...) BEFORE the route handler runs. After that
+        # consumption `request.body.read` returns "" until the IO is
+        # rewound. Cuboid's REST routes hand-parse JSON via
+        # `JSON.load(request.body.read)`, so without this rewind every
+        # PUT/POST that ships a JSON body silently looks empty under
+        # Rack 3 — `Options.scheduler.url`, scan options, etc. never get
+        # set and downstream routes 404. Idempotent under Rack 2.
+        request.body.rewind if request.body.respond_to?(:rewind)
+
         protected!
         content_type :json
     end

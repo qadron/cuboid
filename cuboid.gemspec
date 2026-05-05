@@ -46,11 +46,11 @@ Gem::Specification.new do |s|
     s.add_dependency 'base64'
 
     # DO NOT TOUCH THIS GROUP VERSION
-    s.add_dependency 'rack',                '~> 2.2.22'
+    s.add_dependency 'rack', '>= 3.0'
     s.add_dependency 'rack-test'
     # REST API
-    s.add_dependency 'sinatra',             '3.2.0'
-    s.add_dependency 'sinatra-contrib',     '3.2.0'
+    s.add_dependency 'sinatra', '>= 4.0'
+    s.add_dependency 'sinatra-contrib', '>= 4.0'
 
     # RPC client/server implementation.
     s.add_dependency 'toq'
