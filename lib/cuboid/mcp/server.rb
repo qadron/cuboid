@@ -5,115 +5,67 @@ require 'mcp'
 require 'mcp/server/transports/streamable_http_transport'
 
 require_relative 'auth'
+require_relative '../rest/server/instance_helpers'
 
 module Cuboid
 module MCP
 
-# Cuboid's MCP-server framework. Application gems register tools (a
-# class-per-tool subclassing `MCP::Tool`) via `mcp_tool_for` on their
-# `Cuboid::Application` subclass. This wrapper boots an MCP::Server
-# with those tools and mounts its `StreamableHTTPTransport` (POST for
-# JSON-RPC requests, GET for the SSE stream) on a Puma listener.
+# Cuboid's MCP-server framework. Mirrors `Cuboid::Rest::Server`:
+# application gems register tool handlers via `mcp_service_for(name,
+# handler)` on their `Cuboid::Application` subclass; this server
+# mounts one MCP transport per (instance, service) pair under
+# `/instances/:instance/<service>` and proxies tool calls to the
+# resolved engine instance via RPC.
 #
-# Mirrors the shape of `Cuboid::Rest::Server` so consumers have a
-# consistent boot story across the two surfaces.
+# Spawnable as `:mcp` via Cuboid::Processes::Manager (see
+# `lib/cuboid/processes/executables/mcp.rb`).
 class Server
-
-    # MCP transport's HTTP path. Single endpoint that accepts POST
-    # (JSON-RPC requests) and GET (SSE stream); the transport's
-    # Rack-level dispatcher routes by request method.
-    DEFAULT_PATH = '/mcp'.freeze
 
     class << self
 
         # Boot the MCP server.
         #
         # @param [Hash] options
-        # @option options [String]  :bind     IP/host to bind ('0.0.0.0', '127.0.0.1', etc.)
+        # @option options [String]  :bind     IP/host to bind
         # @option options [Integer] :port     Port to listen on
-        # @option options [String]  :path     Mount path (default: '/mcp')
-        # @option options [String]  :name     Server name advertised to clients
-        # @option options [String]  :version  Server version advertised to clients
-        # @option options [Hash]    :tls      Optional TLS settings —
-        #   { private_key:, certificate:, ca: } — same shape as
-        #   Cuboid::Rest::Server.
-        # @option options [Boolean] :stateless  Stateless mode for the
-        #   StreamableHTTPTransport (no per-session state). Default: false.
+        # @option options [String]  :name     MCP server name advertised to clients
+        # @option options [String]  :version  MCP server version advertised to clients
+        # @option options [Hash]    :tls      Optional TLS — same shape as Rest::Server
+        # @option options [Boolean] :stateless  Streamable HTTP stateless mode
         def run!( options )
-            puma_server = Puma::Server.new( rack_app( options ) )
+            puma = Puma::Server.new( rack_app( options ) )
 
-            ssl = configure_listener( puma_server, options )
+            ssl = configure_listener( puma, options )
 
             puts "MCP server listening on " \
                  "http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}" \
-                 "#{options[:path] || DEFAULT_PATH}"
+                 "/instances/:instance/<service>"
 
             begin
-                puma_server.run.join
+                puma.run.join
             rescue Interrupt
-                puma_server.stop( true )
+                puma.stop( true )
             end
         end
 
-        # Build (without booting) the Rack app the MCP transport runs
-        # under. Exposed as a public class method so tests can hit it
-        # via Rack::Test without spinning up a Puma listener — and so
-        # consumers wanting to mount MCP inside a larger Rack/Sinatra
-        # tree can do so without involving `run!`.
+        # Build (without booting) the Rack app — exposed for tests
+        # (Rack::Test against `rack_app({})`) and for embedders that
+        # want to mount MCP under a larger Rack tree.
         def rack_app( options = {} )
-            mcp_server = build_mcp_server( options )
-
-            transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(
-                mcp_server,
+            dispatcher = Dispatcher.new(
+                name:      options[:name],
+                version:   options[:version],
                 stateless: options.fetch( :stateless, false )
             )
 
-            build_rack_app( transport, options )
+            Rack::Builder.new do
+                use Cuboid::MCP::Auth
+                run dispatcher
+            end.to_app
         end
 
         private
 
-        def build_mcp_server( options )
-            ::MCP::Server.new(
-                name:    options[:name]    || application_name,
-                version: options[:version] || ::Cuboid::VERSION,
-                tools:   registered_tools
-            )
-        end
-
-        # Tools come from whichever Cuboid::Application subclass the
-        # consumer registered. Returns [] when nothing has been
-        # registered — the server still boots and just advertises an
-        # empty tool list, which is useful for smoke tests.
-        def registered_tools
-            app = ::Cuboid::Application.application
-            return [] if app.nil?
-            return [] if !app.respond_to?( :mcp_tools )
-            app.mcp_tools
-        end
-
-        def application_name
-            app = ::Cuboid::Application.application
-            return 'cuboid' if app.nil?
-            app.to_s.downcase.gsub( '::', '-' )
-        end
-
-        # Wrap the transport in a Rack::Builder so route mounting + any
-        # pre-transport middleware (auth, logging, request-id, …) live
-        # in one place. Auth is opt-in — applications register a
-        # validator via `mcp_authenticate_with` on their
-        # `Cuboid::Application` subclass; without one the middleware
-        # passes every request through.
-        def build_rack_app( transport, options )
-            path = options[:path] || DEFAULT_PATH
-            Rack::Builder.new do
-                use Cuboid::MCP::Auth
-                map( path ) { run transport }
-            end.to_app
-        end
-
-        # Same TLS handling as Cuboid::Rest::Server — Puma's MiniSSL
-        # context for cert/key/ca, optional client-cert verification.
         def configure_listener( puma_server, options )
             tls = options[:tls]
 
@@ -141,6 +93,102 @@ class Server
             end
         end
 
+    end
+
+    # Routes `/instances/:instance/<service>/...` to a per-(instance,
+    # service) MCP transport. Lazily builds and caches the transport
+    # on first request.
+    #
+    # Each transport's MCP::Server is constructed with
+    # `server_context: { instance: <RPC client>, instance_id: <id> }`
+    # so tool implementations can drive the engine directly:
+    #
+    #     def self.call(server_context:, **)
+    #         server_context[:instance].scan.pause!
+    #     end
+    class Dispatcher
+        # InstanceHelpers' @@instances class variable is shared across
+        # all includers of the module — so the same map populated by
+        # Rest::Server / scheduler-sync is visible here without any
+        # explicit cross-process plumbing.
+        include ::Cuboid::Rest::Server::InstanceHelpers
+
+        ROUTE_RE = %r{\A/instances/(?<instance>[^/]+)/(?<service>[^/]+)(?<rest>/.*)?\z}
+
+        def initialize( name: nil, version: nil, stateless: false )
+            @name      = name
+            @version   = version
+            @stateless = stateless
+            @transports = {}     # (instance_id, service_name) => StreamableHTTPTransport
+            @mutex     = Mutex.new
+        end
+
+        def call( env )
+            update_from_scheduler
+
+            match = ROUTE_RE.match( env['PATH_INFO'].to_s )
+            return not_found( 'route does not match /instances/:instance/<service>' ) if !match
+
+            instance_id  = match[:instance]
+            service_name = match[:service].to_sym
+
+            handler = mcp_services[service_name]
+            return not_found( "unknown MCP service: #{service_name.inspect}" ) if !handler
+
+            instance = instances[instance_id]
+            return not_found( "unknown instance: #{instance_id.inspect}" ) if !instance
+
+            transport = transport_for( instance_id, service_name, handler, instance )
+
+            # Strip the /instances/:instance/<service> prefix so the
+            # transport sees only the trailing path it owns (Streamable
+            # HTTP routes by REQUEST_METHOD; PATH_INFO is just used for
+            # session-id check on subsequent requests, but we keep
+            # SCRIPT_NAME accurate for any future per-mount logic).
+            sub_env = env.dup
+            sub_env['PATH_INFO']   = match[:rest].to_s
+            sub_env['SCRIPT_NAME'] = "#{env['SCRIPT_NAME']}/instances/#{instance_id}/#{service_name}"
+
+            transport.call( sub_env )
+        end
+
+        private
+
+        def mcp_services
+            app = ::Cuboid::Application.application
+            return {} if app.nil?
+            return {} if !app.respond_to?( :mcp_services )
+            app.mcp_services
+        end
+
+        def transport_for( instance_id, service_name, handler, instance )
+            tools = Array( handler.tools )
+
+            @mutex.synchronize do
+                @transports[[instance_id, service_name]] ||= begin
+                    mcp_server = ::MCP::Server.new(
+                        name:    @name    || "cuboid-#{service_name}",
+                        version: @version || ::Cuboid::VERSION,
+                        tools:   tools,
+                        server_context: {
+                            instance:    instance,
+                            instance_id: instance_id,
+                            service:     service_name
+                        }
+                    )
+
+                    ::MCP::Server::Transports::StreamableHTTPTransport.new(
+                        mcp_server,
+                        stateless: @stateless
+                    )
+                end
+            end
+        end
+
+        def not_found( message )
+            body = { jsonrpc: '2.0', error: { code: -32601, message: message } }.to_json
+            [ 404, { 'content-type' => 'application/json' }, [body] ]
+        end
     end
 
 end

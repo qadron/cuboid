@@ -132,17 +132,42 @@ class Application
             @rest_services ||= {}
         end
 
-        # Register an MCP::Tool subclass with the application. The tool
-        # is then exposed by Cuboid::MCP::Server when it boots.
-        # Single-arg DSL because each MCP::Tool subclass already
-        # carries its own `tool_name` — no extra namespacing needed
-        # the way `rest_service_for` does it for sub-routes.
-        def mcp_tool_for( tool )
-            mcp_tools << tool unless mcp_tools.include?( tool )
+        # Register an MCP service handler. Mirrors `rest_service_for`:
+        # the application gem provides a module/class that exposes a
+        # set of tools and Cuboid::MCP::Server mounts them per-instance
+        # at `/instances/:instance/<name>` (just like REST mounts
+        # rest_service handlers at `/instances/:instance/<name>`).
+        #
+        # The handler must respond to `.tools`, returning an Array of
+        # `MCP::Tool` subclasses. Each tool's `call` receives a
+        # `server_context:` Hash containing at least `:instance` —
+        # the resolved RPC client for the engine instance the request
+        # is targeting.
+        #
+        # Example:
+        #
+        #     module SCNR::Application::MCPProxy
+        #         class Pause < ::MCP::Tool
+        #             tool_name 'pause'
+        #             description 'Pause the running scan.'
+        #             def self.call(server_context:, **)
+        #                 server_context[:instance].scan.pause!
+        #                 ::MCP::Tool::Response.new([{ type: 'text', text: 'paused' }])
+        #             end
+        #         end
+        #         TOOLS = [Pause].freeze
+        #         def self.tools; TOOLS; end
+        #     end
+        #
+        #     class SCNR::Application < Cuboid::Application
+        #         mcp_service_for :scan, MCPProxy
+        #     end
+        def mcp_service_for( name, handler )
+            mcp_services[name] = handler
         end
 
-        def mcp_tools
-            @mcp_tools ||= []
+        def mcp_services
+            @mcp_services ||= {}
         end
 
         # Register a bearer-token validator for the MCP transport. The
