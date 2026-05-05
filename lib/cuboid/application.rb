@@ -254,6 +254,12 @@ class Application
                     options.merge( options: { paths: { application: source_location } } ),
                     &block
                 )
+            when :mcp
+                return Processes::Manager.spawn(
+                    :mcp,
+                    options.merge( options: { paths: { application: source_location } } ),
+                    &block
+                )
             end
 
             Processes.const_get( const ).spawn(
