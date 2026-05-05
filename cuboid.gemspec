@@ -52,6 +52,10 @@ Gem::Specification.new do |s|
     s.add_dependency 'sinatra', '>= 4.0'
     s.add_dependency 'sinatra-contrib', '>= 4.0'
 
+    # MCP (Model Context Protocol) server framework — Cuboid::MCP::Server
+    # mounts MCP::Server::Transports::StreamableHTTPTransport as a Rack app.
+    s.add_dependency 'mcp', '>= 0.15'
+
     # RPC client/server implementation.
     s.add_dependency 'toq'
 

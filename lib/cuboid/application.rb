@@ -132,6 +132,19 @@ class Application
             @rest_services ||= {}
         end
 
+        # Register an MCP::Tool subclass with the application. The tool
+        # is then exposed by Cuboid::MCP::Server when it boots.
+        # Single-arg DSL because each MCP::Tool subclass already
+        # carries its own `tool_name` — no extra namespacing needed
+        # the way `rest_service_for` does it for sub-routes.
+        def mcp_tool_for( tool )
+            mcp_tools << tool unless mcp_tools.include?( tool )
+        end
+
+        def mcp_tools
+            @mcp_tools ||= []
+        end
+
         def agent_service_for( name, service )
             agent_services[name] = service
         end
