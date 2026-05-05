@@ -4,6 +4,13 @@ require 'rack'
 require 'mcp'
 require 'mcp/server/transports/streamable_http_transport'
 
+# json-schema (a transitive dep of `mcp` for MCP::Tool input/output
+# schema validation) emits a one-time deprecation notice at first use
+# unless we opt out of its MultiJson backend. Stdlib JSON is faster
+# and already loaded — no reason to keep MultiJson in the chain.
+require 'json-schema'
+JSON::Validator.use_multi_json = false
+
 require_relative 'auth'
 require_relative '../rest/server/instance_helpers'
 
