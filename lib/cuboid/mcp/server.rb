@@ -4,6 +4,8 @@ require 'rack'
 require 'mcp'
 require 'mcp/server/transports/streamable_http_transport'
 
+require_relative 'auth'
+
 module Cuboid
 module MCP
 
@@ -91,15 +93,14 @@ class Server
 
         # Wrap the transport in a Rack::Builder so route mounting + any
         # pre-transport middleware (auth, logging, request-id, …) live
-        # in one place. Auth is intentionally TODO — adding it here
-        # later applies it uniformly without touching the transport.
+        # in one place. Auth is opt-in — applications register a
+        # validator via `mcp_authenticate_with` on their
+        # `Cuboid::Application` subclass; without one the middleware
+        # passes every request through.
         def build_rack_app( transport, options )
             path = options[:path] || DEFAULT_PATH
             Rack::Builder.new do
-                # TODO: Authentication middleware — e.g. an API-token
-                # check against env['HTTP_AUTHORIZATION']. Mount before
-                # `map`/`run` so unauthenticated requests never hit the
-                # MCP transport.
+                use Cuboid::MCP::Auth
                 map( path ) { run transport }
             end.to_app
         end

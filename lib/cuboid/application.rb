@@ -145,6 +145,22 @@ class Application
             @mcp_tools ||= []
         end
 
+        # Register a bearer-token validator for the MCP transport. The
+        # block receives the token string and should return a truthy
+        # principal (typically a User record) on success or nil/false
+        # on failure. See Cuboid::MCP::Auth for the request flow.
+        #
+        # Without a registered validator the auth middleware passes
+        # every request through — keeps smoke tests / pre-auth-layer
+        # deployments simple.
+        def mcp_authenticate_with( &block )
+            @mcp_auth_validator = block
+        end
+
+        def mcp_auth_validator
+            @mcp_auth_validator
+        end
+
         def agent_service_for( name, service )
             agent_services[name] = service
         end
