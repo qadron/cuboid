@@ -48,8 +48,8 @@ class Application
             true
         end
 
-        # Cleans up the framework; should be called after running the audit or
-        # after canceling a running scan.
+        # Cleans up the framework; should be called after running the application
+        # or after canceling a running instance.
         def clean_up
             return if @cleaned_up
             @cleaned_up = true
@@ -146,21 +146,21 @@ class Application
         #
         # Example:
         #
-        #     module SCNR::Application::MCPProxy
-        #         class Pause < ::MCP::Tool
-        #             tool_name 'pause'
-        #             description 'Pause the running scan.'
+        #     module MyApp::MCPHandler
+        #         class Ping < ::MCP::Tool
+        #             tool_name 'ping'
+        #             description 'Ping the application instance.'
         #             def self.call(server_context:, **)
-        #                 server_context[:instance].scan.pause!
-        #                 ::MCP::Tool::Response.new([{ type: 'text', text: 'paused' }])
+        #                 server_context[:instance].some_application_method
+        #                 ::MCP::Tool::Response.new([{ type: 'text', text: 'pong' }])
         #             end
         #         end
-        #         TOOLS = [Pause].freeze
+        #         TOOLS = [Ping].freeze
         #         def self.tools; TOOLS; end
         #     end
         #
-        #     class SCNR::Application < Cuboid::Application
-        #         mcp_service_for :scan, MCPProxy
+        #     class MyApp < Cuboid::Application
+        #         mcp_service_for :my_service, MCPHandler
         #     end
         def mcp_service_for( name, handler )
             mcp_services[name] = handler
@@ -336,7 +336,7 @@ class Application
     #
     #   Framework statistics:
     #
-    #   *  `:runtime`       -- Scan runtime in seconds.
+    #   *  `:runtime`       -- Application runtime in seconds.
     def statistics
         {
             runtime: @start_datetime ? (@finish_datetime || Time.now) - @start_datetime : 0,

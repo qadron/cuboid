@@ -12,6 +12,7 @@ require 'json-schema'
 JSON::Validator.use_multi_json = false
 
 require_relative 'auth'
+require_relative 'core_tools'
 require_relative '../rest/server/instance_helpers'
 
 module Cuboid
@@ -45,8 +46,9 @@ class Server
             ssl = configure_listener( puma, options )
 
             puts "MCP server listening on " \
-                 "http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}" \
-                 "/instances/:instance/<service>"
+                 "http#{'s' if ssl}://#{options[:bind]}:#{options[:port]}\n" \
+                 "  /mcp                              — framework tools (spawn / list / kill)\n" \
+                 "  /instances/:instance/<service>    — application tools per running instance"
 
             begin
                 puma.run.join
@@ -102,25 +104,39 @@ class Server
 
     end
 
-    # Routes `/instances/:instance/<service>/...` to a per-(instance,
-    # service) MCP transport. Lazily builds and caches the transport
-    # on first request.
+    # Routes incoming MCP requests to one of two transports:
     #
-    # Each transport's MCP::Server is constructed with
-    # `server_context: { instance: <RPC client>, instance_id: <id> }`
-    # so tool implementations can drive the engine directly:
+    #   /mcp                            → framework tools (spawn /
+    #                                     list / kill instances). Cuboid
+    #                                     ships these directly via
+    #                                     `Cuboid::MCP::CoreTools`.
+    #
+    #   /instances/:instance/<service>  → application tools registered
+    #                                     via `mcp_service_for` on the
+    #                                     Cuboid::Application subclass,
+    #                                     scoped to one running engine
+    #                                     instance.
+    #
+    # Per-instance per-service transports are lazily built and cached
+    # on first request; the core /mcp transport is built once at boot.
+    # Each per-instance MCP::Server gets
+    # `server_context: { instance: <RPC client>, instance_id: <id>, service: <sym> }`
+    # so tool implementations can drive the application instance directly:
     #
     #     def self.call(server_context:, **)
-    #         server_context[:instance].scan.pause!
+    #         server_context[:instance].some_application_method
     #     end
     class Dispatcher
         # InstanceHelpers' @@instances class variable is shared across
         # all includers of the module — so the same map populated by
-        # Rest::Server / scheduler-sync is visible here without any
-        # explicit cross-process plumbing.
+        # Rest::Server / scheduler-sync / our own SpawnInstance core
+        # tool is visible here without any explicit cross-process
+        # plumbing.
         include ::Cuboid::Rest::Server::InstanceHelpers
 
-        ROUTE_RE = %r{\A/instances/(?<instance>[^/]+)/(?<service>[^/]+)(?<rest>/.*)?\z}
+        CORE_PATH         = '/mcp'.freeze
+        PER_INSTANCE_RE   = %r{\A/instances/(?<instance>[^/]+)/(?<service>[^/]+)(?<rest>/.*)?\z}
+        CORE_PATH_RE      = %r{\A/mcp(?<rest>/.*)?\z}
 
         def initialize( name: nil, version: nil, stateless: false )
             @name      = name
@@ -133,9 +149,27 @@ class Server
         def call( env )
             update_from_scheduler
 
-            match = ROUTE_RE.match( env['PATH_INFO'].to_s )
-            return not_found( 'route does not match /instances/:instance/<service>' ) if !match
+            path = env['PATH_INFO'].to_s
 
+            if (m = CORE_PATH_RE.match( path ))
+                dispatch_core( env, m )
+            elsif (m = PER_INSTANCE_RE.match( path ))
+                dispatch_per_instance( env, m )
+            else
+                not_found( 'route does not match /mcp or /instances/:instance/<service>' )
+            end
+        end
+
+        private
+
+        def dispatch_core( env, match )
+            sub_env = env.dup
+            sub_env['PATH_INFO']   = match[:rest].to_s
+            sub_env['SCRIPT_NAME'] = "#{env['SCRIPT_NAME']}/mcp"
+            core_transport.call( sub_env )
+        end
+
+        def dispatch_per_instance( env, match )
             instance_id  = match[:instance]
             service_name = match[:service].to_sym
 
@@ -159,7 +193,19 @@ class Server
             transport.call( sub_env )
         end
 
-        private
+        def core_transport
+            @core_transport ||= begin
+                mcp_server = ::MCP::Server.new(
+                    name:    @name    || 'cuboid',
+                    version: @version || ::Cuboid::VERSION,
+                    tools:   ::Cuboid::MCP::CoreTools.tools
+                )
+                ::MCP::Server::Transports::StreamableHTTPTransport.new(
+                    mcp_server,
+                    stateless: @stateless
+                )
+            end
+        end
 
         def mcp_services
             app = ::Cuboid::Application.application

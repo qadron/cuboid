@@ -71,15 +71,10 @@ describe Cuboid::MCP::Server do
         instance_obj
     end
 
-    context 'when the path does not match /instances/:instance/<service>' do
+    context 'when the path is unrecognised' do
         before do
-            fake_application.mcp_service_for(:scan, build_handler_with_tools)
+            fake_application.mcp_service_for(:my_service, build_handler_with_tools)
             stub_instance('inst-1')
-        end
-
-        it '404s a top-level POST' do
-            post_jsonrpc '/mcp', 'initialize', INITIALIZE_PARAMS
-            last_response.status.should == 404
         end
 
         it '404s an unrelated path' do
@@ -88,11 +83,69 @@ describe Cuboid::MCP::Server do
         end
     end
 
+    context 'core tools at /mcp (framework-level)' do
+        # Stub double for kill_instance: needs `.shutdown` and `.close`.
+        let(:killable) do
+            obj = Object.new
+            obj.define_singleton_method(:shutdown) { nil }
+            obj.define_singleton_method(:close)    { nil }
+            obj
+        end
+
+        it 'serves an initialize handshake' do
+            post_jsonrpc '/mcp', 'initialize', INITIALIZE_PARAMS
+
+            last_response.status.should == 200
+            JSON.parse(last_response.body)['result']['protocolVersion']
+                .should == '2025-06-18'
+        end
+
+        it 'lists the framework tools (list/spawn/kill instance)' do
+            post_jsonrpc '/mcp', 'tools/list'
+
+            names = JSON.parse(last_response.body)['result']['tools'].map { |t| t['name'] }
+            names.sort.should == %w[kill_instance list_instances spawn_instance]
+        end
+
+        it 'list_instances returns currently-registered ids' do
+            stub_instance('inst-a')
+            stub_instance('inst-b')
+
+            post_jsonrpc '/mcp', 'tools/call', { name: 'list_instances', arguments: {} }
+
+            text = JSON.parse(last_response.body)['result']['content'].first['text']
+            ids = JSON.parse(text).keys
+            ids.sort.should == %w[inst-a inst-b]
+        end
+
+        it 'kill_instance removes the instance from the shared map' do
+            stub_instance('inst-x', killable)
+
+            post_jsonrpc '/mcp', 'tools/call',
+                         { name: 'kill_instance', arguments: { instance_id: 'inst-x' } }
+
+            text = JSON.parse(last_response.body)['result']['content'].first['text']
+            text.should include('killed: inst-x')
+            Cuboid::Rest::Server::InstanceHelpers
+                .class_variable_get(:@@instances).key?('inst-x').should == false
+        end
+
+        it 'kill_instance returns an error response when the id is unknown' do
+            post_jsonrpc '/mcp', 'tools/call',
+                         { name: 'kill_instance', arguments: { instance_id: 'nope' } }
+
+            body    = JSON.parse(last_response.body)
+            content = body['result']['content'].first
+            body['result']['isError'].should == true
+            content['text'].should include('unknown instance')
+        end
+    end
+
     context 'when the service is not registered' do
         before { stub_instance('inst-1') }
 
         it '404s with an explanatory error body' do
-            post_jsonrpc '/instances/inst-1/scan', 'initialize', INITIALIZE_PARAMS
+            post_jsonrpc '/instances/inst-1/my_service', 'initialize', INITIALIZE_PARAMS
 
             last_response.status.should == 404
             JSON.parse(last_response.body)['error']['message']
@@ -102,11 +155,11 @@ describe Cuboid::MCP::Server do
 
     context 'when the instance is not in the local map' do
         before do
-            fake_application.mcp_service_for(:scan, build_handler_with_tools)
+            fake_application.mcp_service_for(:my_service, build_handler_with_tools)
         end
 
         it '404s with an explanatory error body' do
-            post_jsonrpc '/instances/missing/scan', 'initialize', INITIALIZE_PARAMS
+            post_jsonrpc '/instances/missing/my_service', 'initialize', INITIALIZE_PARAMS
 
             last_response.status.should == 404
             JSON.parse(last_response.body)['error']['message']
@@ -136,12 +189,12 @@ describe Cuboid::MCP::Server do
         let(:handler) { build_handler_with_tools(tool_class) }
 
         before do
-            fake_application.mcp_service_for(:scan, handler)
+            fake_application.mcp_service_for(:my_service, handler)
             stub_instance('inst-1')
         end
 
         it 'serves an initialize handshake at /instances/:instance/<service>' do
-            post_jsonrpc '/instances/inst-1/scan', 'initialize', INITIALIZE_PARAMS
+            post_jsonrpc '/instances/inst-1/my_service', 'initialize', INITIALIZE_PARAMS
 
             last_response.status.should == 200
             body = JSON.parse(last_response.body)
@@ -149,7 +202,7 @@ describe Cuboid::MCP::Server do
         end
 
         it 'lists the registered tools via tools/list' do
-            post_jsonrpc '/instances/inst-1/scan', 'tools/list'
+            post_jsonrpc '/instances/inst-1/my_service', 'tools/list'
 
             tools = JSON.parse(last_response.body)['result']['tools']
             tools.size.should == 1
@@ -157,7 +210,7 @@ describe Cuboid::MCP::Server do
         end
 
         it 'invokes the tool with the resolved instance in server_context' do
-            post_jsonrpc '/instances/inst-1/scan', 'tools/call',
+            post_jsonrpc '/instances/inst-1/my_service', 'tools/call',
                          { name: 'echo', arguments: { message: 'hi' } }
 
             content = JSON.parse(last_response.body)['result']['content']
@@ -169,12 +222,12 @@ describe Cuboid::MCP::Server do
         it 'isolates state across distinct (instance, service) pairs' do
             stub_instance('inst-2')
 
-            post_jsonrpc '/instances/inst-1/scan', 'tools/call',
+            post_jsonrpc '/instances/inst-1/my_service', 'tools/call',
                          { name: 'echo', arguments: { message: 'hi' } }
             JSON.parse(last_response.body)['result']['content']
                 .first['text'].should == 'inst-1: hi'
 
-            post_jsonrpc '/instances/inst-2/scan', 'tools/call',
+            post_jsonrpc '/instances/inst-2/my_service', 'tools/call',
                          { name: 'echo', arguments: { message: 'hi' } }
             JSON.parse(last_response.body)['result']['content']
                 .first['text'].should == 'inst-2: hi'
@@ -183,7 +236,7 @@ describe Cuboid::MCP::Server do
 
     context 'when an auth validator is registered' do
         before do
-            fake_application.mcp_service_for(:scan, build_handler_with_tools)
+            fake_application.mcp_service_for(:my_service, build_handler_with_tools)
             stub_instance('inst-1')
             fake_application.mcp_authenticate_with do |token|
                 token == 'good' ? :ok : nil
@@ -191,12 +244,12 @@ describe Cuboid::MCP::Server do
         end
 
         it '401s a request with no Authorization header' do
-            post_jsonrpc '/instances/inst-1/scan', 'initialize', INITIALIZE_PARAMS
+            post_jsonrpc '/instances/inst-1/my_service', 'initialize', INITIALIZE_PARAMS
             last_response.status.should == 401
         end
 
         it 'allows requests with a valid bearer token' do
-            post_jsonrpc '/instances/inst-1/scan', 'initialize', INITIALIZE_PARAMS,
+            post_jsonrpc '/instances/inst-1/my_service', 'initialize', INITIALIZE_PARAMS,
                          headers: { 'HTTP_AUTHORIZATION' => 'Bearer good' }
             last_response.status.should == 200
         end
@@ -204,13 +257,13 @@ describe Cuboid::MCP::Server do
 
     context 'with custom name / version' do
         before do
-            fake_application.mcp_service_for(:scan, build_handler_with_tools)
+            fake_application.mcp_service_for(:my_service, build_handler_with_tools)
             stub_instance('inst-1')
             @app_options = { name: 'spectre-mcp', version: '7.7.7' }
         end
 
         it 'advertises them in serverInfo' do
-            post_jsonrpc '/instances/inst-1/scan', 'initialize', INITIALIZE_PARAMS
+            post_jsonrpc '/instances/inst-1/my_service', 'initialize', INITIALIZE_PARAMS
 
             info = JSON.parse(last_response.body)['result']['serverInfo']
             info['name'].should    == 'spectre-mcp'
