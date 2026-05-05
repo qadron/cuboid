@@ -18,7 +18,7 @@ class Server < Sinatra::Base
 
     Dir.glob( "#{File.dirname( __FILE__ )}/server/routes/*.rb" ).each { |f| require f }
 
-    helpers InstanceHelpers
+    helpers ::Cuboid::Rest::Server::InstanceHelpers
 
     register Sinatra::Namespace
     Cuboid::Application.application.rest_services.each do |name, service|

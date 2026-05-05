@@ -20,7 +20,7 @@ module Instances
 
             options = ::JSON.load( request.body.read ) || {}
 
-            instance = get_instance
+            instance = self.spawn
             max_utilization! if !instance
 
             handle_error proc { (instance.shutdown rescue nil) } do
@@ -110,8 +110,6 @@ module Instances
         app.delete '/instances/:instance' do
             ensure_instance!
             id = params[:instance]
-
-            instance = instances[id]
             handle_error { (instance.shutdown rescue nil) }
 
             instances.delete( id ).close
