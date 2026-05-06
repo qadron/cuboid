@@ -7,9 +7,19 @@ shared_examples_for 'option_group' do
         it 'converts self to a serializable hash' do
             expect(data).to be_kind_of Hash
 
+            # MessagePack — the on-wire serializer behind
+            # `Cuboid::RPC::Serializer` — has no Symbol type, so any
+            # Symbol value in `data` round-trips as a String. Compare
+            # against the stringified-Symbol form rather than `data`
+            # itself; the round-trip equality the spec is asserting
+            # holds modulo that one well-known coercion.
+            expected = data.each_with_object({}) do |(k, v), h|
+                h[k] = v.is_a?(Symbol) ? v.to_s : v
+            end
+
             expect(Cuboid::RPC::Serializer.load(
                 Cuboid::RPC::Serializer.dump( data )
-            )).to eq(data)
+            )).to eq(expected)
         end
     end
 
