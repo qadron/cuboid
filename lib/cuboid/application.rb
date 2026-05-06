@@ -170,6 +170,27 @@ class Application
             @mcp_services ||= {}
         end
 
+        # Register an `MCP::Tool` subclass to ship at the top-level
+        # `/mcp` endpoint, alongside `CoreTools` (`list_instances`,
+        # `spawn_instance`, `kill_instance`) — i.e. NOT routed through
+        # the per-instance dispatcher and not requiring an
+        # `instance_id` argument. Use this for app-level catalog /
+        # metadata tools the client may want to consult before
+        # spawning anything.
+        #
+        # Example:
+        #
+        #     class MyApp < Cuboid::Application
+        #         mcp_app_tool ListChecks
+        #     end
+        def mcp_app_tool( tool_class )
+            mcp_app_tools << tool_class
+        end
+
+        def mcp_app_tools
+            @mcp_app_tools ||= []
+        end
+
         # Register a bearer-token validator for the MCP transport. The
         # block receives the token string and should return a truthy
         # principal (typically a User record) on success or nil/false

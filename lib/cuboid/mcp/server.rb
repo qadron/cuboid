@@ -235,6 +235,14 @@ class Server
         def build_tools
             tools = ::Cuboid::MCP::CoreTools.tools.dup
 
+            # App-level top-level tools registered via
+            # `Cuboid::Application.mcp_app_tool` — ride the same
+            # routing as CoreTools (no instance_id requirement).
+            app = ::Cuboid::Application.application
+            if app.respond_to?( :mcp_app_tools )
+                tools.concat( app.mcp_app_tools )
+            end
+
             mcp_services.each do |service_name, handler|
                 Array( handler.tools ).each do |tool_class|
                     tools << Dispatcher.wrap_service_tool( service_name, tool_class )
