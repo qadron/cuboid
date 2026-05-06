@@ -58,6 +58,16 @@ class Manager
             end
         end
     rescue Timeout::Error
+        # SIGTERM didn't take in 10s — escalate. Ruby's default TERM
+        # handler only raises SignalException on the main thread; if
+        # the main thread already exited but a non-daemon Application
+        # thread is keeping the runtime up (audit workers, browser
+        # cluster manager, etc.) then no amount of TERMs will land.
+        # Without this escalation the spec suite leaks engine
+        # subprocesses every time a kill_instance / killall fails to
+        # land cleanly.
+        Process.kill( 'KILL', pid ) rescue nil
+        @pids.delete pid
     end
 
     def find( bin )
@@ -212,7 +222,18 @@ class Manager
         spawn_options[:out] = stdout if stdout
         spawn_options[:err] = stderr if stderr
 
-        options[:ppid]   = Process.pid
+        # `:detached` decouples "child outlives spawner" from
+        # `:daemonize`, which only controls whether THIS thread
+        # `waitpid`s. MCP and the spec helpers spawn with
+        # `daemonize: true` but want the child tethered (die with
+        # parent); only Agent-managed instances genuinely want to
+        # outlive their spawner. Default = tethered; Agent's
+        # `spawn_instance` opts out by passing `detached: true`.
+        # base.rb's parent-death watchdog reads `$options[:ppid]`;
+        # a missing ppid means "no tether" and the watchdog
+        # short-circuits.
+        detached = options.delete( :detached )
+        options[:ppid]   = Process.pid if !detached
         options[:tmpdir] = Options.paths.tmpdir
 
         cuboid_options = Options.dup.update( options.delete(:options) || {} ).to_h

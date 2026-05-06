@@ -66,6 +66,7 @@ class Instances
         fork  = options.delete(:fork)
 
         daemonize  = options.delete(:daemonize)
+        detached   = options.delete(:detached)
         port_range = options.delete( :port_range )
 
         options[:ssl] ||= {
@@ -100,7 +101,14 @@ class Instances
             url = "#{options[:rpc][:server_address]}:#{options[:rpc][:server_port]}"
         end
 
-        pid = Manager.spawn( :instance, options: options, token: token, fork: fork, daemonize: daemonize )
+        pid = Manager.spawn(
+          :instance,
+          options:   options,
+          token:     token,
+          fork:      fork,
+          daemonize: daemonize,
+          detached:  detached
+        )
 
         System.slots.use pid
 

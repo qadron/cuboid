@@ -226,6 +226,27 @@ class Instance
     end
 
     # Makes the server go bye-bye...Lights out!
+    #
+    # `shutdown` must reliably take the Ruby process with it. Stopping
+    # the reactor + RPC server alone leaves the Application's non-daemon
+    # threads (audit workers, browser cluster manager, etc.) blocking
+    # the runtime — historically this leaked engine subprocesses every
+    # time `kill_instance` was called over MCP, and showed up in the
+    # cuboid spec suite as leftover ruby processes after the run.
+    # The `instance.shutdown` RPC returned success but the daemonised
+    # process never actually exited.
+    #
+    # Two-stage exit:
+    #   1. Raise SystemExit on the **main thread** so the at_exit
+    #      chain runs (Cuboid_<pid> tmpdir cleanup, live-plugin's
+    #      `exited` push). SystemExit raised on a non-main thread
+    #      only kills that thread — must hit the main one.
+    #   2. Watchdog SIGKILL after a grace window in case a
+    #      non-daemon Application thread refuses to release. The
+    #      Paths boot-sweep reaps the orphaned tmpdir on the next
+    #      cuboid process launch even when at_exit didn't run.
+    SHUTDOWN_GRACE_SECONDS = 5.0
+
     def shutdown( &block )
         if @shutdown
             block.call if block_given?
@@ -243,6 +264,17 @@ class Instance
             @server.shutdown
             @raktr.stop
             block.call true if block_given?
+
+            # Stage 1 — graceful: SystemExit on the main thread so
+            # at_exit handlers run.
+            main = Thread.main
+            if main && main.alive? && main != Thread.current
+                main.raise( SystemExit.new( 0 ) ) rescue nil
+            end
+
+            # Stage 2 — watchdog: hammer if main can't unwind.
+            sleep SHUTDOWN_GRACE_SECONDS
+            Process.kill( 'KILL', Process.pid ) rescue nil
         end
 
         true
