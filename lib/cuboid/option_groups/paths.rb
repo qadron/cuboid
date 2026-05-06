@@ -132,6 +132,13 @@ class Paths < Cuboid::OptionGroup
     def tmpdir
         return @tmpdir if @tmpdir
 
+        # Reap dirs left over from prior Cuboid runs that were
+        # SIGKILL'd / segfaulted / had their host crash — anything
+        # that bypassed the `at_exit` block below. Done at boot
+        # rather than on a timer so the user doesn't have to think
+        # about it.
+        sweep_orphaned_tmpdirs
+
         dir = tmp_dir_for( Process.pid )
 
         FileUtils.mkdir_p dir
@@ -144,6 +151,39 @@ class Paths < Cuboid::OptionGroup
 
     def tmp_dir_for( pid )
         "#{os_tmpdir}/#{TMPDIR_SUFFIX}#{pid}"
+    end
+
+    # Sweep `<os_tmpdir>/Cuboid_<pid>` dirs whose pid is no longer
+    # alive. Best-effort: a dir we can't probe / remove (permission,
+    # racing peer boot, etc.) is silently skipped — never block boot
+    # on cleanup. Ignores `Cuboid_Snapshot_<token>` and any other
+    # non-pid-suffixed siblings.
+    def sweep_orphaned_tmpdirs
+        Dir.glob( "#{os_tmpdir}/#{TMPDIR_SUFFIX}*" ).each do |path|
+            next if !File.directory?( path )
+
+            suffix = File.basename( path ).sub( TMPDIR_SUFFIX, '' )
+            next if suffix !~ /\A\d+\z/
+
+            pid = suffix.to_i
+            begin
+                Process.kill( 0, pid )
+                # Still alive — leave it.
+                next
+            rescue Errno::ESRCH
+                # No such process — orphan; fall through to cleanup.
+            rescue Errno::EPERM
+                # Alive but owned by another user — leave it.
+                next
+            rescue
+                next
+            end
+
+            FileUtils.rm_rf( path )
+        rescue
+            # Anything unexpected (filesystem race, transient I/O
+            # error) — skip this entry, keep going.
+        end
     end
 
     def config
