@@ -461,6 +461,8 @@ omit it with `live: false` on `spawn_instance`.
 * [QMap](https://github.com/qadron/qmap) --  A distributed network mapper/security scanner powered by [nmap](http://nmap.org/).
 * [Peplum](https://github.com/peplum/peplum) -- A distributed parallel processing solution -- allows you to build Beowulf
 (or otherwise) clusters and even super-computers.
+* [Spectre Scan](https://try.spectre-scan.sh)
+* [Apex Recon](https://try.apex-recon.sh)
 
 ## License
 
