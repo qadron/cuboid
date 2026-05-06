@@ -479,7 +479,7 @@ describe Cuboid::Rest::Server do
             end
         end
 
-        context 'when the instance is from the Scheduler' do
+        context 'when the instance is from the Scheduler'do
             before do
                 put '/scheduler/url', scheduler.url
             end
@@ -581,7 +581,6 @@ describe Cuboid::Rest::Server do
             delete url
 
             get "/instances/#{id}"
-            ap response
             expect(response_code).to eq 404
         end
 
@@ -606,9 +605,9 @@ describe Cuboid::Rest::Server do
                 delete url
                 expect(response_code).to eq 200
 
-                sleep 0.1 while scheduler.failed.empty?
+                sleep 1 while !scheduler.running.empty?
 
-                expect(scheduler.failed).to include @id
+                expect(scheduler.completed).to include @id
             end
 
             context 'when the instance completes' do
