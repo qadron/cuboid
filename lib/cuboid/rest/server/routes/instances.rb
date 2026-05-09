@@ -36,19 +36,18 @@ module Instances
         app.get '/instances/:instance' do
             ensure_instance!
 
-            session[params[:instance]] ||= {
-                seen_errors:  0,
-            }
+            # The Sinatra session is per-cookie, but its id isn't
+            # exposed; lazy-init a per-client UUID and pass it as
+            # the RPC `session:` token so the engine tracks the
+            # error-line offset server-side.
+            require 'securerandom' unless defined?( SecureRandom )
+            session[:rpc_session_id] ||= SecureRandom.uuid
 
             data = instance_for( params[:instance] ) do |instance|
                 instance.progress(
-                    with:    [
-                                 errors:  session[params[:instance]][:seen_errors],
-                             ]
+                  session: "#{session[:rpc_session_id]}:#{params[:instance]}"
                 )
             end
-
-            session[params[:instance]][:seen_errors] += data[:errors].size
 
             json data
         end
@@ -113,8 +112,6 @@ module Instances
             handle_error { (instance.shutdown rescue nil) }
 
             instances.delete( id ).close
-
-            session.delete params[:instance]
 
             json nil
         end

@@ -152,51 +152,38 @@ class Instance
     #   In addition, ask to **not** be served data you already have, like
     #   error messages.
     #
-    #   To be kept completely up to date on the progress of a scan (i.e. receive
-    #   new issues and error messages asap) in an efficient manner, you will need
-    #   to keep track of the error messages you already have and explicitly tell
-    #   the method to not send the same data back to you on subsequent calls.
+    #   Pass a `session:` token (any caller-chosen string) and the
+    #   server returns only error lines past the previous offset
+    #   under that token. Reuse the same token across polls for
+    #   the same logical view; pick a fresh one to start fresh.
     #
-    # ## Retrieving errors (`:errors` option) without duplicate data
-    #
-    #   This is done by telling the method how many error messages you already
-    #   have and you will be served the errors from the error-log that are past
-    #   that line.
-    #   So, if you were to use a loop to get fresh progress data it would look
-    #   like so:
-    #
-    #     error_cnt = 0
-    #     i = 0
+    #     token = SecureRandom.uuid
     #     while sleep 1
-    #         # Test method, triggers an error log...
-    #         instance.error_test "BOOM! #{i+=1}"
-    #
-    #         # Only request errors we don't already have
-    #         errors = instance.progress( with: { errors: error_cnt } )[:errors]
-    #         error_cnt += errors.size
-    #
-    #         # You will only see new errors
-    #         puts errors.join("\n")
+    #         errors = instance.progress( session: token )[:errors]
+    #         puts errors.join( "\n" )
     #     end
     #
+    #   Without `session`, callers must opt into errors via
+    #   `with: [:errors]` and will receive the full set every poll.
+    #
     # @param  [Hash]  options
-    #   Options about what progress data to retrieve and return.
-    # @option options [Array<Symbol, Hash>]  :with
-    #   Specify data to include:
-    #
-    #   * :errors -- Errors and the line offset to use for {#errors}.
-    #     Pass as a hash, like: `{ errors: 10 }`
-    # @option options [Array<Symbol, Hash>]  :without
-    #   Specify data to exclude:
-    #
-    #   * :statistics -- Don't include runtime statistics.
+    # @option options [String, Symbol] :session
+    #   Caller-chosen session token. When provided, the response
+    #   carries only errors past the previously emitted offset.
+    # @option options [Array<Symbol>]  :with
+    #   Block names to include when no session is in use. Currently
+    #   only `:errors` is delta-able.
+    # @option options [Array<Symbol>]  :without
+    #   Block names to exclude. One or more of `:statistics`,
+    #   `:errors`. Takes precedence over `with:` and over the
+    #   session-on-by-default blocks.
     #
     # @return [Hash]
     #   * `statistics` -- General runtime statistics (merged when part of Grid)
     #       (enabled by default)
     #   * `status` -- {#status}
     #   * `busy` -- {#busy?}
-    #   * `errors` -- {#errors} (disabled by default)
+    #   * `errors` -- {#errors}
     def progress( options = {} )
         progress_handler( options.merge( as_hash: true ) )
     end
@@ -294,49 +281,50 @@ class Instance
         [Process.pid]
     end
 
-    def self.parse_progress_opts( options, key )
-        parsed = {}
-        [options.delete( key ) || options.delete( key.to_s )].compact.each do |w|
-            case w
-                when Array
-                    w.compact.flatten.each do |q|
-                        case q
-                            when String, Symbol
-                                parsed[q.to_sym] = nil
-
-                            when Hash
-                                parsed.merge!( q.my_symbolize_keys )
-                        end
-                    end
-
-                when String, Symbol
-                    parsed[w.to_sym] = nil
-
-                when Hash
-                    parsed.merge!( w.my_symbolize_keys )
-            end
-        end
-
-        parsed
+    def self.parse_block_names( raw )
+        return [] if raw.nil?
+        Array( raw ).flatten.compact.map(&:to_sym)
     end
 
     private
 
-    def progress_handler( options = {}, &block )
-        with    = self.class.parse_progress_opts( options, :with )
-        without = self.class.parse_progress_opts( options, :without )
+    # Server-side state for `session:`-tracked progress polls.
+    # Keyed off a caller-supplied token so RPC clients don't have
+    # to re-transmit the error line offset on every poll.
+    def progress_sessions
+        @progress_sessions ||= {}
+    end
 
-        options = {
+    def progress_session_for( id )
+        progress_sessions[id] ||= { seen_errors: 0 }
+    end
+
+    def progress_handler( options = {}, &block )
+        options = options.my_symbolize_keys
+
+        session_id = options.delete( :session )
+        session    = progress_session_for( session_id ) if session_id
+
+        with    = self.class.parse_block_names( options[:with] )
+        without = self.class.parse_block_names( options[:without] )
+
+        # Under a session, errors are on by default; without a
+        # session, callers opt in via `with: [:errors]`.
+        include_errors = !without.include?( :errors ) && (session || with.include?( :errors ))
+
+        wrapper_options = {
             as_hash:    options[:as_hash],
             statistics: !without.include?( :statistics )
         }
+        wrapper_options[:errors] = session ? session[:seen_errors] : 0 if include_errors
 
-        if with[:errors]
-            options[:errors] = with[:errors]
-        end
-
-        @application.progress( options ) do |data|
+        @application.progress( wrapper_options ) do |data|
             data[:busy] = busy?
+
+            if session && data[:errors]
+                session[:seen_errors] += data[:errors].size
+            end
+
             block.call( data )
         end
     end

@@ -5,9 +5,8 @@ module Rest
 class Server
 
 # Sinatra-coupled supplement to `Cuboid::Server::InstanceHelpers` —
-# the methods that read `env`, call `handle_error` (a Sinatra helper
-# defined on `Rest::Server`), or prune `session` entries belonging to
-# scheduler-removed instances. Everything that doesn't need Sinatra
+# the methods that read `env` or call `handle_error` (a Sinatra helper
+# defined on `Rest::Server`). Everything that doesn't need Sinatra
 # stays on the shared module above.
 module InstanceHelpers
 
@@ -19,24 +18,8 @@ module InstanceHelpers
         super
     end
 
-    # Adds Sinatra-session cleanup for IDs the scheduler has dropped.
-    # The shared `update_from_scheduler` already removes them from the
-    # instance map; this override prunes the matching session keys so a
-    # second request from the same browser doesn't try to reach a dead
-    # instance.
-    def update_from_scheduler
-        return if !scheduler
-
-        pruned = scheduler.failed.keys | scheduler.completed.keys
-        super
-        pruned.each { |id| session.delete id }
-    end
-
     def instance_for( id, &block )
-        cleanup = proc do
-            instances.delete( id ).close
-            session.delete id
-        end
+        cleanup = proc { instances.delete( id ).close }
 
         handle_error cleanup do
             block.call instances[id]
