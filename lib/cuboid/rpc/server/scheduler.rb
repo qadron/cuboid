@@ -45,6 +45,13 @@ class Scheduler
 
     TICK_CONSUME = 0.1
 
+    # Number of CONSECUTIVE RPC errors a running Instance is allowed to
+    # accumulate before it's given up on and marked {#failed}. A single
+    # transient blip (the Instance momentarily unreachable on one ping, an
+    # engine reconnect, etc.) shouldn't fail an otherwise-healthy scan; any
+    # clean response in between resets the count.
+    RPC_ERROR_TOLERANCE = 5
+
     def initialize
         @options = Options.instance
 
@@ -62,9 +69,11 @@ class Scheduler
         @id_to_priority = {}
         @by_priority    = {}
 
-        @running   = {}
-        @completed = {}
-        @failed    = {}
+        @running           = {}
+        @completed         = {}
+        @failed            = {}
+        # Per-Instance consecutive RPC-error counters (see RPC_ERROR_TOLERANCE).
+        @rpc_error_counts  = Hash.new( 0 )
 
         set_handlers( @server )
         trap_interrupts { Thread.new { shutdown } }
@@ -335,17 +344,37 @@ class Scheduler
                 handle_rpc_error( id, busy )
                 block.call
             elsif busy
+                # Clean response — the Instance is reachable and working, so
+                # reset its consecutive-error tolerance.
+                @rpc_error_counts.delete( id )
                 print_debug "[#{id}] Busy."
                 block.call
             else
+                # Don't reset here: this leads to the report grab, whose own
+                # transient errors must be allowed to accumulate toward the
+                # tolerance rather than being cleared every ping.
                 get_report_and_shutdown( id, client, &block )
             end
         end
     end
 
     def handle_rpc_error( id, error )
-        print_error "[#{id}] Failed: [#{error.class}] #{error.to_s}"
+        @rpc_error_counts[id] += 1
+        count = @rpc_error_counts[id]
 
+        # Tolerate transient errors — only give up after RPC_ERROR_TOLERANCE
+        # of them in a row. The Instance stays in @running and gets re-checked
+        # on the next ping; a clean response resets the count.
+        if count < RPC_ERROR_TOLERANCE
+            print_error "[#{id}] RPC error #{count}/#{RPC_ERROR_TOLERANCE} " \
+                        "(tolerating): [#{error.class}] #{error}"
+            return
+        end
+
+        print_error "[#{id}] Failed after #{count} consecutive RPC errors: " \
+                    "[#{error.class}] #{error}"
+
+        @rpc_error_counts.delete( id )
         @failed[id] = {
             error:       error.class.to_s,
             description: error.to_s
@@ -371,6 +400,7 @@ class Scheduler
             client.shutdown do
                 print_status "[#{id}] Completed."
 
+                @rpc_error_counts.delete( id )
                 @running.delete( id ).close
                 @completed[id] = path
 
