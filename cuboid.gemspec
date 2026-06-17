@@ -56,6 +56,13 @@ Gem::Specification.new do |s|
     # mounts MCP::Server::Transports::StreamableHTTPTransport as a Rack app.
     s.add_dependency 'mcp', '>= 0.15'
 
+    # MCP::Tool input/output schema validation. We `require 'json-schema'`
+    # directly (Cuboid::MCP::Server, and downstream Apex/Spectre application
+    # gems do too) — it used to ride in transitively via `mcp`, but newer mcp
+    # releases dropped it, so declare it explicitly here. Cuboid is a pinned
+    # dependency of those app gems, so declaring it once here covers them too.
+    s.add_dependency 'json-schema'
+
     # RPC client/server implementation.
     s.add_dependency 'toq'
 
